@@ -25,6 +25,9 @@ In Google Cloud Console → APIs & Services → Credentials → your OAuth clien
 - `https://<your-worker>.<your-subdomain>.workers.dev/api/auth/google/callback` (and your custom domain, if any)
 
 ## Deploy to Cloudflare
+**Dashboard (no CLI):** see [DEPLOY.md](DEPLOY.md).
+
+**CLI:**
 ```powershell
 npx wrangler login
 npx wrangler d1 create pilani-predict       # copy database_id into wrangler.jsonc
