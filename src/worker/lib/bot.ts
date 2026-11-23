@@ -16,9 +16,9 @@ import { BOT_FLOW_ID, BOT_MM_ID, clamp, newId } from "./util";
 import { cancelStatements, closeMarket, placeOrder } from "./engine";
 
 /** Tuning. Each processed market costs ~1 row write + ladder diff; keep D1 write budget in mind. */
-const MAX_MARKETS_PER_TICK = 10;
+const MAX_MARKETS_PER_TICK = 5; // keeps D1 free-plan writes (~100k rows/day) in budget
 const LEVELS = 4;
-const FLOW_PROB = 0.25;
+const FLOW_PROB = 0.15;
 const MIN_KEEP = 10; // replace a level when its remaining size drops below this
 
 const BOT_LOCK_KEY = "bot_last_run";

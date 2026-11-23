@@ -1,6 +1,6 @@
 # Deploying from the Cloudflare dashboard
 
-This guide deploys Pilani Predict entirely through the Cloudflare web dashboard, with no Wrangler CLI on your machine. Cloudflare builds straight from the GitHub repo (`Shayan-zen/calshi`) and redeploys on every push to `main`.
+This guide deploys Pilani Predict entirely through the Cloudflare web dashboard, with no Wrangler CLI on your machine. Cloudflare builds straight from this GitHub repo and redeploys on every push to `main`.
 
 **Time:** ~15 minutes. **Cost:** the free plan covers everything here: Workers, D1 and cron triggers.
 
@@ -17,7 +17,7 @@ This guide deploys Pilani Predict entirely through the Cloudflare web dashboard,
 
 You can do this in the GitHub web editor:
 
-1. Open https://github.com/Shayan-zen/calshi/blob/main/wrangler.jsonc and click the ✏️ pencil icon.
+1. Open `wrangler.jsonc` in this repo on GitHub and click the ✏️ pencil icon.
 2. Replace `00000000-0000-0000-0000-000000000000` with the ID you copied:
    ```jsonc
    "database_id": "a1b2c3d4-....",
@@ -30,7 +30,7 @@ You can do this in the GitHub web editor:
 
 1. In the dashboard, go to **Compute (Workers) → Workers & Pages** and click **Create**.
 2. On the **Workers** tab, choose **Import a repository**.
-3. Click **Connect GitHub**, authorize Cloudflare, and select the **`Shayan-zen/calshi`** repo. You can grant access to just that repo.
+3. Click **Connect GitHub**, authorize Cloudflare, and select this repo. You can grant access to just that repo.
 4. Fill in the build settings:
 
    | Field | Value |
@@ -79,9 +79,9 @@ In the Worker, go to **Settings → Variables and Secrets → + Add**. Add each 
 
 | Name | Value |
 |---|---|
-| `GOOGLE_CLIENT_ID` | `793945071992-nin68db30pss6a4cnsp9rvkso780knu6.apps.googleusercontent.com` |
-| `GOOGLE_CLIENT_SECRET` | the `client_secret` from your downloaded `client_secret_*.json` file |
-| `ADMIN_EMAILS` | `f20250983@pilani.bits-pilani.ac.in` (comma-separate more admins) |
+| `GOOGLE_CLIENT_ID` | the `client_id` from your downloaded `client_secret_*.json` file |
+| `GOOGLE_CLIENT_SECRET` | the `client_secret` from the same file |
+| `ADMIN_EMAILS` | the admin's BITS email(s), comma separated |
 
 Click **Deploy** to save. **Never add `DEV_LOGIN`** here: it enables a password-less dev login.
 
@@ -90,7 +90,7 @@ Click **Deploy** to save. **Never add `DEV_LOGIN`** here: it enables a password-
 ## 6. Allow the production URL in Google OAuth
 
 1. Copy your Worker's URL from its **Overview** page, e.g. `https://pilani-predict.<your-subdomain>.workers.dev`.
-2. In **console.cloud.google.com**, select project **calshi** and go to **APIs & Services → Credentials**, then click your OAuth 2.0 Client ID.
+2. In **console.cloud.google.com**, select your project and go to **APIs & Services → Credentials**, then click your OAuth 2.0 Client ID.
 3. Under **Authorized redirect URIs**, click **+ Add URI** and add:
    ```
    https://pilani-predict.<your-subdomain>.workers.dev/api/auth/google/callback

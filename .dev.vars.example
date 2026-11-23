@@ -1,5 +1,5 @@
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-ADMIN_EMAILS=f20xxxxxx@pilani.bits-pilani.ac.in
+ADMIN_EMAILS=admin@pilani.bits-pilani.ac.in
 # Enables POST /api/auth/dev-login for local testing without Google. NEVER set in production.
 DEV_LOGIN=true

@@ -12,8 +12,7 @@
     {
       "binding": "DB",
       "database_name": "pilani-predict",
-      // Replace with the id printed by `npx wrangler d1 create pilani-predict` before remote deploy.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "795136d3-f4bc-4054-a575-7b3a8058bcc1",
       "migrations_dir": "migrations"
     }
   ],
