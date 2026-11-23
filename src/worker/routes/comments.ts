@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { Comment } from "../../shared/types";
 import { type AppEnv, type AuthedUser, requireUser } from "../lib/session";
-import { HttpError, newId, notFound, parseBody } from "../lib/util";
+import { ANON_NAME, HttpError, isHiddenEmail, newId, notFound, parseBody } from "../lib/util";
 
 export const comments = new Hono<AppEnv>();
 
@@ -13,6 +13,7 @@ interface CommentRow {
   body: string;
   created_at: number;
   user_name: string;
+  user_email: string;
   avatar_url: string | null;
 }
 
@@ -20,14 +21,14 @@ const toComment = (r: CommentRow, viewer: AuthedUser | null): Comment => ({
   id: r.id,
   eventSlug: r.event_slug,
   userId: r.user_id,
-  userName: r.user_name,
-  avatarUrl: r.avatar_url,
+  userName: isHiddenEmail(r.user_email) ? ANON_NAME : r.user_name,
+  avatarUrl: isHiddenEmail(r.user_email) ? null : r.avatar_url,
   body: r.body,
   createdAt: r.created_at,
   canDelete: !!viewer && (viewer.isAdmin || viewer.row.id === r.user_id),
 });
 
-const SELECT = `SELECT c.*, u.name AS user_name, u.avatar_url FROM comments c JOIN users u ON u.id = c.user_id`;
+const SELECT = `SELECT c.*, u.name AS user_name, u.email AS user_email, u.avatar_url FROM comments c JOIN users u ON u.id = c.user_id`;
 
 comments.get("/events/:slug/comments", async (c) => {
   const { results } = await c.env.DB.prepare(`${SELECT} WHERE c.event_slug = ? ORDER BY c.created_at DESC LIMIT 200`)
@@ -53,7 +54,7 @@ comments.post("/events/:slug/comments", async (c) => {
   const now = Date.now();
   await db.prepare(`INSERT INTO comments (id, event_slug, user_id, body, created_at) VALUES (?, ?, ?, ?, ?)`).bind(id, slug, u.row.id, body, now).run();
   const comment = toComment(
-    { id, event_slug: slug, user_id: u.row.id, body, created_at: now, user_name: u.row.name, avatar_url: u.row.avatar_url },
+    { id, event_slug: slug, user_id: u.row.id, body, created_at: now, user_name: u.row.name, user_email: u.row.email, avatar_url: u.row.avatar_url },
     u,
   );
   return c.json({ comment });

@@ -5,7 +5,7 @@ import type { AppEnv } from "../lib/session";
 import { type EventRow, type MarketRow, eventDetail, eventSummaries, marketSummary, currentPrices } from "../lib/markets";
 import { TRADE_SELECT, type TradeJoinRow, toTrade } from "../lib/mappers";
 import { maybeRunBot } from "../lib/bot";
-import { BOT_IDS, intParam, notFound } from "../lib/util";
+import { BOT_IDS, intParam, isHiddenEmail, notFound } from "../lib/util";
 
 const DAY = 86400_000;
 const RANGE_MS: Record<Range, number | null> = { "1d": DAY, "1w": 7 * DAY, "1m": 30 * DAY, all: null };
@@ -193,8 +193,8 @@ browse.get("/leaderboard", async (c) => {
   const limit = intParam(c.req.query("limit"), 50, 1, 200);
   const [users, locked, pos] = await Promise.all([
     db
-      .prepare(`SELECT id, name, avatar_url, balance, volume FROM users WHERE is_bot = 0`)
-      .all<{ id: string; name: string; avatar_url: string | null; balance: number; volume: number }>(),
+      .prepare(`SELECT id, email, name, avatar_url, balance, volume FROM users WHERE is_bot = 0`)
+      .all<{ id: string; email: string; name: string; avatar_url: string | null; balance: number; volume: number }>(),
     db
       .prepare(`SELECT user_id, SUM(remaining * price) AS v FROM orders WHERE status = 'open' AND action = 'buy' GROUP BY user_id`)
       .all<{ user_id: string; v: number }>(),
@@ -213,7 +213,7 @@ browse.get("/leaderboard", async (c) => {
     posVal.set(p.user_id, (posVal.get(p.user_id) ?? 0) + p.yes_qty * y + p.no_qty * (100 - y));
   }
   const entries: LeaderboardEntry[] = users.results
-    .filter((u) => !BOT_IDS.includes(u.id))
+    .filter((u) => !BOT_IDS.includes(u.id) && !isHiddenEmail(u.email))
     .map((u) => ({
       rank: 0,
       userId: u.id,
