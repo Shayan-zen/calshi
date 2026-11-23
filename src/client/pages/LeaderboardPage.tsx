@@ -21,7 +21,7 @@ export default function LeaderboardPage() {
       ) : lb.isError ? (
         <ErrorState error={lb.error} onRetry={() => lb.refetch()} />
       ) : entries.length === 0 ? (
-        <div className="rounded-xl border border-line">
+        <div className="rounded-xl border border-line bg-card">
           <EmptyState icon={<Trophy className="size-5" />} title="No traders yet" body="Place a trade to get on the board." />
         </div>
       ) : (

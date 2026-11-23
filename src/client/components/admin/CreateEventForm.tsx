@@ -15,7 +15,7 @@ interface OutcomeDraft {
 }
 
 const input =
-  "h-10 w-full rounded-lg border border-line bg-white px-3 text-sm placeholder:text-faint focus:border-ink-2/40 focus:outline-none";
+  "field h-10 w-full rounded-lg px-3 text-sm";
 const label = "mb-1.5 block text-sm font-medium text-ink-2";
 
 function toLocalInput(ms: number): string {
@@ -137,7 +137,7 @@ export default function CreateEventForm({ event, onDone, onCancel }: { event?: E
     setOutcomes((xs) => xs.map((x, k) => (k === i ? { ...x, ...patch } : x)));
 
   return (
-    <form onSubmit={submit} className={clsx("space-y-4 rounded-xl border border-line p-5", editing && "bg-white")}>
+    <form onSubmit={submit} className={clsx("space-y-4 rounded-xl border border-line bg-card p-5 shadow-card", editing && "shadow-none")}>
       <h2 className="text-lg font-semibold">{editing ? "Edit event" : "Create event"}</h2>
       <div className="grid gap-4 sm:grid-cols-[1fr_180px_90px]">
         <div>
@@ -190,7 +190,7 @@ export default function CreateEventForm({ event, onDone, onCancel }: { event?: E
             onClick={() => setExclusive((x) => !x)}
             className={clsx("relative h-6 w-10 rounded-full transition-colors", exclusive ? "bg-yes" : "bg-line")}
           >
-            <span className={clsx("absolute top-0.5 size-5 rounded-full bg-white shadow transition-all", exclusive ? "left-[18px]" : "left-0.5")} />
+            <span className={clsx("absolute top-0.5 size-5 rounded-full bg-card shadow transition-all", exclusive ? "left-[18px]" : "left-0.5")} />
           </button>
           Mutually exclusive (only one outcome can win)
         </label>
@@ -258,9 +258,9 @@ export default function CreateEventForm({ event, onDone, onCancel }: { event?: E
         <button
           type="submit"
           disabled={pending}
-          className="flex h-11 items-center gap-2 rounded-lg bg-ink px-5 text-sm font-semibold text-white hover:bg-ink-2 disabled:opacity-50"
+          className="flex h-11 items-center gap-2 rounded-lg bg-ink px-5 text-sm font-semibold text-on-ink hover:bg-ink-2 disabled:opacity-50"
         >
-          {pending && <Spinner className="text-white" />}
+          {pending && <Spinner className="text-on-ink" />}
           {editing ? "Save changes" : "Create event"}
         </button>
         {onCancel && (

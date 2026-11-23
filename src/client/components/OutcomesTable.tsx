@@ -28,7 +28,7 @@ function PriceButton({
       }}
       disabled={disabled}
       className={clsx(
-        "tnum w-[84px] rounded-lg py-2 text-[13px] font-semibold transition-colors disabled:opacity-50 sm:w-[104px]",
+        "tnum w-[80px] rounded-lg py-2 text-[13px] font-semibold transition-colors disabled:opacity-50 sm:w-[104px]",
         yes
           ? active
             ? "bg-yes text-white"
@@ -66,14 +66,15 @@ function OutcomeRow({
   const noCost = market.yesBid !== null ? 100 - market.yesBid : market.noPrice;
 
   return (
-    <li className={clsx("border-b border-line last:border-b-0", selected && "bg-surface/60")}>
+    <li className={clsx("relative border-b border-line-2 last:border-b-0", selected && "bg-surface/50")}>
+      {selected && <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-ink" />}
       <div
         role="button"
         tabIndex={0}
         aria-expanded={expanded}
         onClick={onToggle}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onToggle())}
-        className="flex cursor-pointer items-center gap-3 px-3 py-3 hover:bg-surface sm:px-4"
+        className="flex cursor-pointer items-center gap-3 px-3 py-3 transition-colors hover:bg-surface/70 sm:px-4"
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
@@ -85,8 +86,8 @@ function OutcomeRow({
             <span className="tnum">{volume(market.volume)} vol</span>
           </div>
         </div>
-        <div className="flex w-16 flex-col items-end sm:w-24">
-          <span className="tnum text-xl font-bold text-ink sm:text-2xl">{pct(market.yesPrice)}</span>
+        <div className="flex w-14 flex-col items-end sm:w-24">
+          <span className="tnum text-xl font-bold tracking-tight text-ink sm:text-2xl">{pct(market.yesPrice)}</span>
           <Change value={market.change24h} className="text-xs" />
         </div>
         {settled ? (
@@ -118,7 +119,7 @@ function OutcomeRow({
         )}
       </div>
       {expanded && (
-        <div className="animate-fade-in border-t border-line-2 bg-white px-1 pb-3 sm:px-3">
+        <div className="animate-fade-in border-t border-line-2 bg-card px-1 pb-3 sm:px-3">
           <div className="flex gap-4 px-3 pt-2 text-sm font-medium">
             {(
               [
@@ -129,13 +130,13 @@ function OutcomeRow({
               <button
                 key={k}
                 onClick={() => setTab(k)}
-                className={clsx("border-b-2 py-1.5", tab === k ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink")}
+                className={clsx("border-b-2 py-1.5 transition-colors", tab === k ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink")}
               >
                 {label}
               </button>
             ))}
           </div>
-          <div className="mt-2 rounded-lg border border-line-2">
+          <div className="mt-2 overflow-hidden rounded-lg border border-line">
             {tab === "book" ? <OrderBook market={market} /> : <RecentTrades ticker={market.ticker} />}
           </div>
         </div>
@@ -159,10 +160,10 @@ export default function OutcomesTable({
   const [expanded, setExpanded] = useState<string | null>(single ? (event.markets[0]?.ticker ?? null) : null);
 
   return (
-    <section className="rounded-xl border border-line">
-      <div className="flex items-center justify-between border-b border-line px-3 py-2 text-xs font-medium text-muted sm:px-4">
+    <section className="overflow-hidden rounded-xl border border-line bg-card shadow-card">
+      <div className="flex items-center justify-between border-b border-line bg-surface/50 px-3 py-2 text-xs font-medium text-muted sm:px-4">
         <span>{single ? "Outcome" : `${event.markets.length} outcomes`}</span>
-        <span className="hidden sm:block">Tap a row for its order book</span>
+        <span className="hidden sm:block">Select a row for its order book</span>
       </div>
       <ul>
         {event.markets.map((m) => (

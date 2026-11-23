@@ -1,36 +1,165 @@
 @import "tailwindcss";
 
+/* dark: variant follows the data-theme attribute set on <html> (see index.html + theme.tsx) */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* ------------------------------------------------------------------ */
+/* Raw palette. Light is the default; dark overrides under data-theme. */
+/* ------------------------------------------------------------------ */
+:root {
+  --bg: #ffffff;
+  --card: #ffffff;
+  --pop: #ffffff; /* menus, tooltips, toasts */
+  --surface: #f6f7f9; /* subtle fill: hovers, segmented tracks, table heads */
+  --surface-2: #eef0f3;
+  --thumb: #ffffff; /* active segment in a segmented control */
+
+  --ink: #0f1115;
+  --ink-2: #3d434e;
+  --muted: #6b7180;
+  --faint: #9aa0ab;
+  --on-ink: #ffffff; /* text on an ink-filled button */
+
+  --line: #e5e7ec;
+  --line-2: #eff1f4;
+  --line-strong: #d3d7de;
+
+  --yes: #00a36c;
+  --yes-strong: #008a5b;
+  --yes-tint: #e6f6ef;
+  --yes-tint-2: #d2efe2;
+  --no: #a23bd8;
+  --no-strong: #8a2cbd;
+  --no-tint: #f5ebfb;
+  --no-tint-2: #ecdaf7;
+
+  --up: #00a36c;
+  --down: #e5484d;
+  --down-tint: #fdecec;
+
+  --accent: #2f6fe4;
+  --chart-grid: #eff1f4;
+  --chart-axis: #9aa0ab;
+  --chart-cursor: rgb(15 17 21 / 0.25);
+  --series-1: #0a8f63;
+  --series-2: #2f6fe4;
+  --series-3: #c8650a;
+  --series-4: #a23bd8;
+
+  /* generated tiles (avatars, event icons): hsl lightness/saturation knobs */
+  --avatar-bg-s: 70%;
+  --avatar-bg-l: 93%;
+  --avatar-fg-l: 32%;
+  --tile-s: 82%;
+  --tile-l1: 92%;
+  --tile-l2: 84%;
+
+  --sh-card: 0 1px 2px rgb(15 17 21 / 0.04);
+  --sh-lift: 0 8px 24px -10px rgb(15 17 21 / 0.16), 0 1px 3px rgb(15 17 21 / 0.06);
+  --sh-pop: 0 16px 40px -12px rgb(15 17 21 / 0.25), 0 2px 6px rgb(15 17 21 / 0.08);
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0b0d10;
+  --card: #14171c;
+  --pop: #1a1e24;
+  --surface: #1a1e24;
+  --surface-2: #222730;
+  --thumb: #2b313b;
+
+  --ink: #eef0f3;
+  --ink-2: #c4c9d1;
+  --muted: #8d939e;
+  --faint: #636a76;
+  --on-ink: #0b0d10;
+
+  --line: #23272f;
+  --line-2: #1d2128;
+  --line-strong: #323844;
+
+  --yes: #17b77e;
+  --yes-strong: #35d69a;
+  --yes-tint: #10261e;
+  --yes-tint-2: #163427;
+  --no: #a952e6;
+  --no-strong: #c48af2;
+  --no-tint: #22172d;
+  --no-tint-2: #2d1e3c;
+
+  --up: #35d69a;
+  --down: #ff5f66;
+  --down-tint: #2d1618;
+
+  --accent: #5b93ff;
+  --chart-grid: #1f232a;
+  --chart-axis: #6b7280;
+  --chart-cursor: rgb(238 240 243 / 0.3);
+  --series-1: #35d69a;
+  --series-2: #5b93ff;
+  --series-3: #f0913a;
+  --series-4: #c084fc;
+
+  --avatar-bg-s: 35%;
+  --avatar-bg-l: 20%;
+  --avatar-fg-l: 74%;
+  --tile-s: 40%;
+  --tile-l1: 24%;
+  --tile-l2: 17%;
+
+  --sh-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --sh-lift: 0 10px 28px -10px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.02);
+  --sh-pop: 0 18px 44px -12px rgb(0 0 0 / 0.75), 0 2px 8px rgb(0 0 0 / 0.4);
+
+  color-scheme: dark;
+}
+
+/* Tailwind utilities (bg-card, text-ink, border-line, bg-yes/10 ...) resolve to the vars above. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-pop: var(--pop);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-thumb: var(--thumb);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-on-ink: var(--on-ink);
+
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-line-strong: var(--line-strong);
+
+  --color-yes: var(--yes);
+  --color-yes-strong: var(--yes-strong);
+  --color-yes-tint: var(--yes-tint);
+  --color-yes-tint-2: var(--yes-tint-2);
+  --color-no: var(--no);
+  --color-no-strong: var(--no-strong);
+  --color-no-tint: var(--no-tint);
+  --color-no-tint-2: var(--no-tint-2);
+
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-down-tint: var(--down-tint);
+  --color-accent: var(--accent);
+
+  --shadow-card: var(--sh-card);
+  --shadow-lift: var(--sh-lift);
+  --shadow-pop: var(--sh-pop);
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  --color-ink: #0f1115;
-  --color-ink-2: #3d434e;
-  --color-muted: #6b7180;
-  --color-faint: #9aa0ab;
-  --color-line: #e7e9ee;
-  --color-line-2: #f0f1f4;
-  --color-surface: #f7f8fa;
-
-  --color-yes: #00a36c;
-  --color-yes-strong: #008a5b;
-  --color-yes-tint: #e6f6ef;
-  --color-yes-tint-2: #d2efe2;
-  --color-no: #a23bd8;
-  --color-no-strong: #8a2cbd;
-  --color-no-tint: #f5ebfb;
-  --color-no-tint-2: #ecdaf7;
-
-  --color-up: #00a36c;
-  --color-down: #e5484d;
-  --color-down-tint: #fdecec;
-
-  --shadow-card: 0 1px 2px rgb(15 17 21 / 0.04);
-  --shadow-lift: 0 6px 24px -8px rgb(15 17 21 / 0.14), 0 1px 3px rgb(15 17 21 / 0.06);
-  --shadow-pop: 0 16px 40px -12px rgb(15 17 21 / 0.25), 0 2px 6px rgb(15 17 21 / 0.08);
-
   --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
-  --animate-slide-up: slide-up 0.22s ease-out;
+  --animate-slide-up: slide-up 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
   --animate-fade-in: fade-in 0.18s ease-out;
+  --animate-pop-in: pop-in 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
   --animate-flash: flash 1.2s ease-out;
 }
 
@@ -46,34 +175,60 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+@keyframes pop-in {
+  from { transform: translateY(-4px) scale(0.98); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
 @keyframes flash {
-  from { background-color: var(--color-yes-tint); }
+  from { background-color: var(--yes-tint); }
   to { background-color: transparent; }
 }
 
 @layer base {
   html {
-    color-scheme: light;
     -webkit-text-size-adjust: 100%;
+    background: var(--bg);
+    scrollbar-color: var(--line-strong) transparent;
   }
   body {
-    background: #ffffff;
-    color: var(--color-ink);
+    background: var(--bg);
+    color: var(--ink);
     font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 28%, transparent);
   }
   :focus-visible {
-    outline: 2px solid #2f6fe4;
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
     border-radius: 6px;
+  }
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none;
   }
   button {
     cursor: pointer;
   }
   button:disabled {
     cursor: not-allowed;
+  }
+  a,
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+  input,
+  textarea,
+  select {
+    color: var(--ink);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--faint);
   }
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
@@ -82,6 +237,18 @@
   }
   input[type="number"] {
     -moz-appearance: textfield;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 999px;
+    border: 2px solid var(--bg);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 
@@ -97,6 +264,31 @@
   }
 }
 
+/* Shared form field: themed bg, border, focus ring. */
+@utility field {
+  background-color: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+  &:hover {
+    border-color: var(--line-strong);
+  }
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: color-mix(in oklab, var(--accent) 70%, var(--line));
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+  }
+}
+
+/* Smooth theme switch, but only while toggling (class added briefly by theme.tsx). */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, fill 0.2s ease !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -104,6 +296,7 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

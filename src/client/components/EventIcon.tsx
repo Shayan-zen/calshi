@@ -42,7 +42,7 @@ export default function EventIcon({
     <span
       aria-hidden
       style={{ ...style, background: slugGradient(slug), fontSize: Math.round(size * 0.5) }}
-      className={clsx("inline-grid shrink-0 place-items-center rounded-lg leading-none", className)}
+      className={clsx("inline-grid shrink-0 place-items-center rounded-lg leading-none ring-1 ring-inset ring-black/5 dark:ring-white/5", className)}
     >
       {icon || (category && CATEGORY_EMOJI[category]) || "📊"}
     </span>

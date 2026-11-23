@@ -24,9 +24,9 @@ const TABS = [
 type Tab = (typeof TABS)[number][0];
 
 const input =
-  "h-9 w-full rounded-lg border border-line bg-white px-3 text-sm placeholder:text-faint focus:border-ink-2/40 focus:outline-none";
+  "field h-9 w-full rounded-lg px-3 text-sm";
 const btnGhost = "rounded-md border border-line px-2.5 py-1 text-xs font-medium hover:bg-surface";
-const btnInk = "inline-flex items-center gap-1 rounded-md bg-ink px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50";
+const btnInk = "inline-flex items-center gap-1 rounded-md bg-ink px-2.5 py-1 text-xs font-semibold text-on-ink disabled:opacity-50";
 const btnBack = "rounded-md px-2 py-1 text-xs font-medium text-muted hover:bg-surface";
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -47,7 +47,7 @@ function Stats() {
       {stats.isLoading
         ? Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-20" />)
         : items.map(([k, v]) => (
-            <div key={k} className="rounded-xl border border-line p-4">
+            <div key={k} className="rounded-xl border border-line bg-card p-4 shadow-card">
               <div className="text-[13px] text-muted">{k}</div>
               <div className="tnum mt-1 text-2xl font-bold">{v}</div>
             </div>
@@ -89,7 +89,7 @@ function MarketActions({ market, pending, setPending }: { market: MarketSummary;
       <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
         <span className="text-xs text-ink-2">{text}</span>
         <button onClick={() => action.mutate(mine.kind === "close" ? "close" : mine.kind)} disabled={action.isPending} className={btnInk}>
-          {action.isPending && <Spinner className="size-3 text-white" />}
+          {action.isPending && <Spinner className="size-3 text-on-ink" />}
           Confirm
         </button>
         <button onClick={() => setPending(null)} className={btnBack}>
@@ -217,7 +217,7 @@ function AddOutcomePanel({ ev, onClose }: { ev: EventSummary; onClose: () => voi
     add.mutate();
   };
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-xl border border-line bg-white p-4">
+    <form onSubmit={submit} className="space-y-3 rounded-xl border border-line bg-card p-4">
       <div className="text-sm font-semibold">Add outcome</div>
       <div className="flex flex-wrap items-center gap-2">
         <input className={clsx(input, "min-w-40 flex-1")} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Outcome name" aria-label="Outcome name" />
@@ -233,7 +233,7 @@ function AddOutcomePanel({ ev, onClose }: { ev: EventSummary; onClose: () => voi
           <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-muted">¢</span>
         </div>
         <button type="submit" disabled={add.isPending} className={clsx(btnInk, "h-9 px-4")}>
-          {add.isPending && <Spinner className="size-3 text-white" />}
+          {add.isPending && <Spinner className="size-3 text-on-ink" />}
           Add
         </button>
         <button type="button" onClick={onClose} className={clsx(btnBack, "h-9")}>
@@ -264,7 +264,7 @@ function ResolveWinnerPanel({ ev, onClose }: { ev: EventSummary; onClose: () => 
   });
   const winnerTitle = ev.markets.find((m) => m.ticker === winner)?.title;
   return (
-    <div className="space-y-3 rounded-xl border border-line bg-white p-4">
+    <div className="space-y-3 rounded-xl border border-line bg-card p-4">
       <div className="text-sm font-semibold">Pick the winning outcome</div>
       <p className="text-xs text-muted">The winner resolves Yes; every other unsettled outcome resolves No.</p>
       <div className="flex flex-wrap gap-1.5">
@@ -291,7 +291,7 @@ function ResolveWinnerPanel({ ev, onClose }: { ev: EventSummary; onClose: () => 
           <>
             <span className="text-xs text-ink-2">Settle “{winnerTitle}” as the winner? This can't be undone.</span>
             <button onClick={() => resolve.mutate()} disabled={resolve.isPending} className={btnInk}>
-              {resolve.isPending && <Spinner className="size-3 text-white" />}
+              {resolve.isPending && <Spinner className="size-3 text-on-ink" />}
               Confirm
             </button>
             <button onClick={() => setConfirming(false)} className={btnBack}>
@@ -329,7 +329,7 @@ function EventsAdminTable() {
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filter"
-          className="h-9 w-56 rounded-lg border border-line px-3 text-sm focus:border-ink-2/40 focus:outline-none"
+          className="field h-9 w-full rounded-lg px-3 text-sm sm:w-56"
         />
       </div>
       {events.isLoading ? (
@@ -452,7 +452,7 @@ function CreditForm({ user, onClose }: { user: AdminUser; onClose: () => void })
       </div>
       <input className={clsx(input, "min-w-40 flex-1")} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (optional)" maxLength={200} aria-label="Reason" />
       <button type="submit" disabled={credit.isPending} className={clsx(btnInk, "h-9 px-4")}>
-        {credit.isPending && <Spinner className="size-3 text-white" />}
+        {credit.isPending && <Spinner className="size-3 text-on-ink" />}
         Apply
       </button>
       <button type="button" onClick={onClose} className={clsx(btnBack, "h-9")}>
@@ -478,7 +478,7 @@ function UsersTab() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search name or email"
-          className="h-9 w-64 rounded-lg border border-line px-3 text-sm focus:border-ink-2/40 focus:outline-none"
+          className="field h-9 w-full rounded-lg px-3 text-sm sm:w-64"
         />
       </div>
       {users.isLoading ? (
@@ -561,9 +561,9 @@ function CommentsTab() {
       ) : comments.isError ? (
         <ErrorState error={comments.error} onRetry={() => comments.refetch()} />
       ) : list.length === 0 ? (
-        <p className="rounded-xl border border-line py-8 text-center text-sm text-muted">No comments yet</p>
+        <p className="rounded-xl border border-line bg-card py-8 text-center text-sm text-muted">No comments yet</p>
       ) : (
-        <ul className="divide-y divide-line-2 rounded-xl border border-line">
+        <ul className="divide-y divide-line-2 rounded-xl border border-line bg-card">
           {list.map((cm) => (
             <li key={cm.id} className="flex items-start gap-3 px-4 py-3">
               <div className="min-w-0 flex-1">

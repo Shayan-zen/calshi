@@ -53,7 +53,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             role="status"
-            className="pointer-events-auto flex w-full max-w-sm animate-slide-up items-start gap-3 rounded-xl border border-line bg-white p-3.5 shadow-pop"
+            className="pointer-events-auto flex w-full max-w-sm animate-slide-up items-start gap-3 rounded-xl border border-line bg-pop p-3.5 shadow-pop"
           >
             {t.kind === "error" ? (
               <AlertCircle className="mt-0.5 size-5 shrink-0 text-down" />
@@ -66,7 +66,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             </div>
             <button
               onClick={() => dismiss(t.id)}
-              className="-m-1 rounded-md p-1 text-faint hover:bg-surface hover:text-ink"
+              className="-m-1 rounded-md p-1 text-faint transition-colors hover:bg-surface hover:text-ink"
               aria-label="Dismiss"
             >
               <X className="size-4" />

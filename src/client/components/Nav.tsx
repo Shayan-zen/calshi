@@ -3,6 +3,7 @@ import Logo from "./Logo";
 import SearchBox from "./SearchBox";
 import UserMenu from "./UserMenu";
 import CategoryTabs from "./CategoryTabs";
+import { ThemeToggleButton } from "./ThemeToggle";
 import { usePortfolio, useUser } from "../hooks/queries";
 import { money } from "../lib/format";
 
@@ -14,7 +15,7 @@ function Balances() {
   return (
     <Link
       to="/portfolio"
-      className="hidden items-stretch gap-1 rounded-lg px-1 py-1 hover:bg-surface md:flex"
+      className="hidden items-stretch gap-1 rounded-lg px-1 py-1 transition-colors hover:bg-surface md:flex"
       title="Open portfolio"
     >
       <div className="px-2 text-right">
@@ -34,15 +35,16 @@ function Balances() {
 export default function Nav() {
   const { user, isLoading } = useUser();
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
-      <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4 sm:gap-5 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur supports-[backdrop-filter]:bg-bg/80">
+      <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-2.5 px-4 sm:gap-5 sm:px-6 lg:px-8">
         <Link to="/" className="shrink-0 rounded-md" aria-label="Pilani Predict home">
           <Logo compact />
         </Link>
         <div className="min-w-0 flex-1">
           <SearchBox />
         </div>
-        <nav className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <nav className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <ThemeToggleButton />
           {isLoading ? (
             <div className="h-8 w-24" />
           ) : user ? (
@@ -54,13 +56,13 @@ export default function Nav() {
             <>
               <Link
                 to="/login"
-                className="hidden rounded-full px-3.5 py-2 text-sm font-semibold text-ink hover:bg-surface sm:inline-flex"
+                className="hidden rounded-full px-3.5 py-2 text-sm font-semibold text-ink transition-colors hover:bg-surface sm:inline-flex"
               >
                 Log in
               </Link>
               <Link
                 to="/login"
-                className="inline-flex rounded-full bg-yes px-4 py-2 text-sm font-semibold text-white hover:bg-yes-strong"
+                className="inline-flex whitespace-nowrap rounded-full bg-yes px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-yes-strong"
               >
                 Sign up
               </Link>

@@ -99,7 +99,8 @@ export function slugGradient(slug: string): string {
   const h = hashString(slug);
   const a = h % 360;
   const b = (a + 40 + ((h >> 9) % 60)) % 360;
-  return `linear-gradient(135deg, hsl(${a} 85% 92%), hsl(${b} 80% 84%))`;
+  // Saturation/lightness are theme vars (index.css) so tiles stay soft in light and dim in dark.
+  return `linear-gradient(135deg, hsl(${a} var(--tile-s) var(--tile-l1)), hsl(${b} var(--tile-s) var(--tile-l2)))`;
 }
 
 export function initials(name: string): string {
@@ -109,8 +110,12 @@ export function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-/** Categorical line colors (validated: adjacent CVD ΔE ≥ 22 on white). Max 4 series; extras fold into the table. */
-export const SERIES_COLORS = ["#0a8f63", "#2f6fe4", "#c8650a", "#a23bd8"];
+/**
+ * Categorical line colors as theme vars (light/dark values live in index.css). Usable directly in
+ * HTML `style`; for SVG/recharts props resolve them with `cssColor()` / `useChartColors()`.
+ * Max 4 series; extras fold into the table.
+ */
+export const SERIES_COLORS = ["var(--series-1)", "var(--series-2)", "var(--series-3)", "var(--series-4)"];
 
 export function clampPrice(p: number): number {
   return Math.min(99, Math.max(1, Math.round(p)));

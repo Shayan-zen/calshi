@@ -26,7 +26,7 @@ function ChartSection({ event }: { event: EventDetail }) {
     <section>
       {single && m0 ? (
         <div className="mb-2 flex items-baseline gap-3">
-          <span className="tnum text-3xl font-bold text-yes-strong">{pct(m0.yesPrice)} chance</span>
+          <span className="tnum text-3xl font-bold tracking-tight text-yes-strong">{pct(m0.yesPrice)} chance</span>
           <Change value={m0.change24h} suffix="%" className="text-sm" />
         </div>
       ) : (
@@ -37,7 +37,7 @@ function ChartSection({ event }: { event: EventDetail }) {
               <span key={s.key} className="flex items-center gap-1.5 text-sm">
                 <span className="size-2.5 rounded-full" style={{ background: s.color }} />
                 <span className="max-w-44 truncate text-ink-2">{s.name}</span>
-                <span className="tnum font-semibold">{m ? pct(m.yesPrice) : ""}</span>
+                <span className="tnum font-semibold text-ink">{m ? pct(m.yesPrice) : ""}</span>
               </span>
             );
           })}
@@ -55,14 +55,14 @@ function ChartSection({ event }: { event: EventDetail }) {
 function RulesSection({ event }: { event: EventDetail }) {
   const [open, setOpen] = useState(false);
   return (
-    <section className="rounded-xl border border-line">
+    <section className="rounded-xl border border-line bg-card shadow-card">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center gap-2 px-4 py-3.5 text-left"
+        className="flex w-full items-center gap-2 rounded-xl px-4 py-3.5 text-left"
       >
         <FileText className="size-4 text-muted" />
-        <span className="flex-1 text-[15px] font-semibold">Rules summary</span>
+        <span className="flex-1 text-[15px] font-semibold text-ink">Rules summary</span>
         <ChevronDown className={clsx("size-4 text-muted transition-transform", open && "rotate-180")} />
       </button>
       <div className="px-4 pb-4">
@@ -111,7 +111,7 @@ function DiscussionTabs({ event }: { event: EventDetail }) {
             key={k}
             onClick={() => setTab(k)}
             className={clsx(
-              "-mb-px border-b-2 pb-2.5 text-[15px] font-semibold",
+              "-mb-px border-b-2 pb-2.5 text-[15px] font-semibold transition-colors",
               tab === k ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink",
             )}
           >
@@ -200,7 +200,7 @@ export default function EventPage() {
       <div className="min-w-0 space-y-7">
         <header>
           <nav aria-label="Breadcrumb" className="mb-3 flex items-center gap-1 text-[13px] text-muted">
-            <Link to="/" className="hover:text-ink">Markets</Link>
+            <Link to="/" className="transition-colors hover:text-ink">Markets</Link>
             <ChevronRight className="size-3.5" />
             <Link to={`/?category=${encodeURIComponent(ev.category)}`} className="hover:text-ink">
               {ev.category}
@@ -209,7 +209,7 @@ export default function EventPage() {
           <div className="flex items-start gap-4">
             <EventIcon slug={ev.slug} icon={ev.icon} imageUrl={ev.imageUrl} category={ev.category} size={64} className="rounded-xl" />
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-[28px]">{ev.title}</h1>
+              <h1 className="text-2xl font-bold leading-tight tracking-tight text-ink sm:text-[28px]">{ev.title}</h1>
               <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted">
                 <span className="inline-flex items-center gap-1">
                   <CalendarClock className="size-3.5" />
@@ -246,19 +246,19 @@ export default function EventPage() {
 
       {/* Mobile: bottom bar + sheet */}
       {market && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3 lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 backdrop-blur px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3 lg:hidden">
           <div className="flex gap-2">
             <button
               onClick={() => select(market.ticker, "yes")}
               disabled={market.status !== "open"}
-              className="tnum flex-1 rounded-lg bg-yes py-3 text-[15px] font-semibold text-white disabled:opacity-50"
+              className="tnum flex-1 rounded-lg bg-yes py-3 text-[15px] font-semibold text-white transition-colors active:bg-yes-strong disabled:opacity-50"
             >
               Yes {market.yesAsk ?? market.yesPrice}¢
             </button>
             <button
               onClick={() => select(market.ticker, "no")}
               disabled={market.status !== "open"}
-              className="tnum flex-1 rounded-lg bg-no py-3 text-[15px] font-semibold text-white disabled:opacity-50"
+              className="tnum flex-1 rounded-lg bg-no py-3 text-[15px] font-semibold text-white transition-colors active:bg-no-strong disabled:opacity-50"
             >
               No {market.yesBid !== null ? 100 - market.yesBid : market.noPrice}¢
             </button>
@@ -267,9 +267,9 @@ export default function EventPage() {
       )}
       {sheetOpen && market && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Trade">
-          <div className="absolute inset-0 animate-fade-in bg-ink/40" onClick={() => setSheetOpen(false)} />
-          <div className="absolute inset-x-0 bottom-0 max-h-[92dvh] animate-slide-up space-y-3 overflow-y-auto rounded-t-2xl bg-surface p-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
-            <div className="mx-auto h-1 w-10 rounded-full bg-line" />
+          <div className="absolute inset-0 animate-fade-in bg-black/50" onClick={() => setSheetOpen(false)} />
+          <div className="absolute inset-x-0 bottom-0 max-h-[92dvh] animate-slide-up space-y-3 overflow-y-auto rounded-t-2xl border-t border-line bg-bg p-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
+            <div className="mx-auto h-1 w-10 rounded-full bg-line-strong" />
             <TradeTicket
               event={ev}
               market={market}

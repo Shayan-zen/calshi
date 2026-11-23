@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Pilani Predict: trade on campus, sports, politics and more with play money. For BITS Pilani students." />
     <meta name="theme-color" content="#ffffff" />
+    <script>
+      // Set the theme before first paint (no flash). Mirrors src/client/theme.tsx.
+      (function () {
+        var mode = "system";
+        try {
+          var v = localStorage.getItem("pp-theme");
+          if (v === "light" || v === "dark" || v === "system") mode = v;
+        } catch (e) {}
+        var dark = mode === "dark" || (mode === "system" && !!window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+        var t = dark ? "dark" : "light";
+        var r = document.documentElement;
+        r.setAttribute("data-theme", t);
+        r.style.colorScheme = t;
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.setAttribute("content", dark ? "#0b0d10" : "#ffffff");
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

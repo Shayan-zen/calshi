@@ -2,7 +2,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import type { MarketSummary, Side } from "../../shared/types";
 import { useMarketTrades, useOrderbook } from "../hooks/queries";
-import { Skeleton } from "./ui";
+import { Segmented, Skeleton } from "./ui";
 import { relTime } from "../lib/format";
 
 interface Row {
@@ -46,36 +46,41 @@ export function OrderBook({ market }: { market: MarketSummary }) {
   const spread = bestAsk !== null && bestBid !== null ? bestAsk - bestBid : null;
   const last = view === "yes" ? market.yesPrice : market.noPrice;
 
-  const row = (r: Row, kind: "ask" | "bid") => (
-    <div key={`${kind}${r.price}`} className="relative grid grid-cols-3 items-center px-3 py-[5px] text-[13px]">
+  const row = (r: Row, kind: "ask" | "bid", best: boolean) => (
+    <div
+      key={`${kind}${r.price}`}
+      className="group relative grid grid-cols-3 items-center px-3 py-[5px] text-[13px] transition-colors hover:bg-surface/70"
+    >
+      {/* depth bar, anchored right like Kalshi; best level a touch stronger */}
       <div
-        className={clsx("absolute inset-y-0.5 left-0 rounded-r", kind === "ask" ? "bg-down/10" : "bg-yes/12")}
-        style={{ width: `${(r.qty / maxQty) * 100}%` }}
+        aria-hidden
+        className={clsx(
+          "absolute inset-y-[3px] right-0 rounded-l-[3px] transition-[width] duration-300",
+          kind === "ask" ? (best ? "bg-down/20" : "bg-down/10") : best ? "bg-yes/25" : "bg-yes/12",
+        )}
+        style={{ width: `${Math.max(2, (r.qty / maxQty) * 100)}%` }}
       />
       <span className={clsx("tnum relative font-semibold", kind === "ask" ? "text-down" : "text-yes-strong")}>{r.price}¢</span>
       <span className="tnum relative text-right text-ink-2">{r.qty.toLocaleString()}</span>
-      <span className="tnum relative text-right text-muted">${((r.price * r.cum) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+      <span className="tnum relative text-right text-muted">
+        ${((r.price * r.cum) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+      </span>
     </div>
   );
 
   return (
     <div>
-      <div className="flex items-center justify-between px-3 pb-2 pt-1">
-        <div className="flex gap-1 rounded-lg bg-surface p-0.5 text-xs font-semibold">
-          {(["yes", "no"] as Side[]).map((s) => (
-            <button
-              key={s}
-              onClick={() => setView(s)}
-              className={clsx(
-                "rounded-md px-2.5 py-1",
-                view === s ? "bg-white text-ink shadow-card" : "text-muted hover:text-ink",
-              )}
-            >
-              Trade {s === "yes" ? "Yes" : "No"}
-            </button>
-          ))}
-        </div>
-        <span className="text-xs text-muted">Top of book</span>
+      <div className="flex items-center justify-between gap-2 px-3 pb-2 pt-2">
+        <Segmented
+          label="Order book side"
+          value={view}
+          onChange={setView}
+          options={[
+            ["yes", "Trade Yes"],
+            ["no", "Trade No"],
+          ]}
+        />
+        <span className="text-[11px] font-medium text-muted">Top 8 levels</span>
       </div>
       <div className="grid grid-cols-3 border-y border-line-2 px-3 py-1.5 text-[11px] font-medium text-muted">
         <span>Price</span>
@@ -83,9 +88,9 @@ export function OrderBook({ market }: { market: MarketSummary }) {
         <span className="text-right">Total</span>
       </div>
       <div className="py-1">
-        {asks.length === 0 ? <p className="px-3 py-2 text-xs text-faint">No asks</p> : asks.map((r) => row(r, "ask"))}
+        {asks.length === 0 ? <p className="px-3 py-2 text-xs text-faint">No asks</p> : asks.map((r, i) => row(r, "ask", i === asks.length - 1))}
       </div>
-      <div className="flex items-center justify-between border-y border-line-2 bg-surface px-3 py-1.5 text-xs">
+      <div className="flex items-center justify-between border-y border-line-2 bg-surface/70 px-3 py-1.5 text-xs">
         <span className="text-muted">
           Last <span className="tnum font-semibold text-ink">{last}¢</span>
         </span>
@@ -94,7 +99,7 @@ export function OrderBook({ market }: { market: MarketSummary }) {
         </span>
       </div>
       <div className="py-1">
-        {bids.length === 0 ? <p className="px-3 py-2 text-xs text-faint">No bids</p> : bids.map((r) => row(r, "bid"))}
+        {bids.length === 0 ? <p className="px-3 py-2 text-xs text-faint">No bids</p> : bids.map((r, i) => row(r, "bid", i === 0))}
       </div>
     </div>
   );
@@ -121,7 +126,7 @@ export function RecentTrades({ ticker }: { ticker: string }) {
       ) : (
         <ul className="py-1">
           {list.map((t) => (
-            <li key={t.id} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 py-[5px] text-[13px]">
+            <li key={t.id} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 py-[5px] text-[13px] transition-colors hover:bg-surface/70">
               <span className={clsx("tnum font-semibold", t.takerSide === "yes" ? "text-yes-strong" : "text-no-strong")}>
                 {t.takerSide === "yes" ? `Yes ${t.yesPrice}¢` : `No ${100 - t.yesPrice}¢`}
               </span>

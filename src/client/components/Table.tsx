@@ -4,7 +4,7 @@ import clsx from "clsx";
 /** Horizontal-scroll wrapper + consistent table styling. */
 export function Table({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={clsx("overflow-x-auto rounded-xl border border-line", className)}>
+    <div className={clsx("overflow-x-auto rounded-xl border border-line bg-card shadow-card", className)}>
       <table className="w-full min-w-[640px] border-collapse text-sm">{children}</table>
     </div>
   );

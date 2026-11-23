@@ -2,14 +2,8 @@ import { useState } from "react";
 import clsx from "clsx";
 import { hashString, initials } from "../lib/format";
 
-const TINTS = [
-  ["#e6f6ef", "#0a7a52"],
-  ["#e8effd", "#2457b8"],
-  ["#fdf1e4", "#a55208"],
-  ["#f5ebfb", "#7f2aa8"],
-  ["#fde9ef", "#b0284f"],
-  ["#eaf4f7", "#1f6b80"],
-];
+/** Hues for generated avatars; lightness/saturation come from theme vars so they adapt to dark mode. */
+const HUES = [155, 220, 30, 280, 340, 195];
 
 export default function Avatar({
   name,
@@ -23,7 +17,9 @@ export default function Avatar({
   className?: string;
 }) {
   const [broken, setBroken] = useState(false);
-  const [bg, fg] = TINTS[hashString(name) % TINTS.length];
+  const h = HUES[hashString(name) % HUES.length];
+  const bg = `hsl(${h} var(--avatar-bg-s) var(--avatar-bg-l))`;
+  const fg = `hsl(${h} 62% var(--avatar-fg-l))`;
   const style = { width: size, height: size, fontSize: Math.max(10, Math.round(size * 0.38)) };
   if (url && !broken) {
     return (

@@ -53,21 +53,21 @@ function DevLogin({ redirect }: { redirect: string }) {
           required
           aria-label="Email"
           placeholder="you@pilani.bits-pilani.ac.in"
-          className="h-10 w-full rounded-lg border border-line px-3 text-sm focus:border-ink-2/40 focus:outline-none"
+          className="field h-10 w-full rounded-lg px-3 text-sm"
         />
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           aria-label="Display name"
           placeholder="Display name (optional)"
-          className="h-10 w-full rounded-lg border border-line px-3 text-sm focus:border-ink-2/40 focus:outline-none"
+          className="field h-10 w-full rounded-lg px-3 text-sm"
         />
         <button
           type="submit"
           disabled={login.isPending}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-ink text-sm font-semibold text-white hover:bg-ink-2 disabled:opacity-50"
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-ink text-sm font-semibold text-on-ink hover:bg-ink-2 disabled:opacity-50"
         >
-          {login.isPending && <Spinner className="text-white" />}
+          {login.isPending && <Spinner className="text-on-ink" />}
           Log in as this user
         </button>
         {login.isError && <p className="text-xs text-down">{login.error.message}</p>}
@@ -88,7 +88,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-surface px-4 py-10">
-      <div className="w-full max-w-[400px] rounded-2xl border border-line bg-white p-7 shadow-card sm:p-8">
+      <div className="w-full max-w-[400px] rounded-2xl border border-line bg-card p-7 shadow-card sm:p-8">
         <Link to="/" className="inline-flex">
           <Logo />
         </Link>
@@ -110,7 +110,7 @@ export default function LoginPage() {
 
         <a
           href={googleHref}
-          className="mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-line bg-white text-[15px] font-semibold text-ink transition-colors hover:bg-surface"
+          className="mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-line bg-card text-[15px] font-semibold text-ink transition-colors hover:bg-surface"
         >
           <GoogleIcon />
           Continue with Google

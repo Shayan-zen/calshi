@@ -88,7 +88,7 @@ export default function SearchBox() {
         type="search"
         placeholder="Search markets"
         aria-label="Search markets"
-        className="h-10 w-full rounded-full border border-line bg-surface pl-9 pr-9 text-sm text-ink placeholder:text-faint focus:border-ink-2/40 focus:bg-white focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+        className="h-10 w-full rounded-full border border-transparent bg-surface pl-9 pr-9 text-sm text-ink transition-[background-color,border-color,box-shadow] placeholder:text-faint hover:border-line focus:border-line-strong focus:bg-card focus:shadow-[0_0_0_3px_color-mix(in_oklab,var(--accent)_16%,transparent)] focus:outline-none [&::-webkit-search-cancel-button]:hidden"
       />
       {text && (
         <button
@@ -103,7 +103,7 @@ export default function SearchBox() {
         </button>
       )}
       {showDropdown && (
-        <div className="absolute inset-x-0 top-12 z-50 animate-fade-in overflow-hidden rounded-xl border border-line bg-white shadow-pop">
+        <div className="absolute inset-x-0 top-12 z-50 animate-pop-in overflow-hidden rounded-xl border border-line bg-pop shadow-pop">
           {results.isLoading ? (
             <div className="px-4 py-3 text-sm text-muted">Searching…</div>
           ) : events.length === 0 ? (

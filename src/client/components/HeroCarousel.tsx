@@ -19,37 +19,40 @@ function HeroSlide({ event }: { event: EventSummary }) {
   const single = event.markets.length === 1;
 
   return (
-    <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] md:gap-8">
+    <div className="grid animate-fade-in gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] md:gap-8">
       <div className="flex min-w-0 flex-col">
-        <Link to={`/events/${event.slug}`} className="flex items-start gap-3">
+        <Link to={`/events/${event.slug}`} className="group flex items-start gap-3 rounded-lg">
           <EventIcon slug={event.slug} icon={event.icon} imageUrl={event.imageUrl} category={event.category} size={52} />
           <div className="min-w-0">
-            <div className="text-xs font-medium text-muted">{event.category}</div>
-            <h2 className="mt-0.5 text-xl font-bold leading-tight tracking-tight text-ink hover:underline sm:text-2xl">
+            <div className="flex items-center gap-2 text-xs font-medium text-muted">
+              <span className="rounded-md bg-surface px-1.5 py-0.5 text-ink-2">{event.category}</span>
+              <span>{closesLabel(event.closeTime)}</span>
+            </div>
+            <h2 className="mt-1.5 text-xl font-bold leading-tight tracking-tight text-ink decoration-2 underline-offset-4 group-hover:underline sm:text-[26px]">
               {event.title}
             </h2>
           </div>
         </Link>
 
-        <ul className="mt-5 space-y-1">
+        <ul className="mt-5 divide-y divide-line-2">
           {outcomes.map((m) => (
-            <li key={m.ticker} className="flex items-center gap-3 rounded-lg py-1.5">
+            <li key={m.ticker} className="flex items-center gap-3 py-2">
               {!single && (
-                <span className="size-2.5 shrink-0 rounded-full" style={{ background: colorByTicker.get(m.ticker) ?? "#e7e9ee" }} />
+                <span className="size-2.5 shrink-0 rounded-full" style={{ background: colorByTicker.get(m.ticker) ?? "var(--line)" }} />
               )}
               <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink">{single ? "Chance" : m.title}</span>
-              <span className="tnum text-[17px] font-bold text-ink">{pct(m.yesPrice)}</span>
+              <span className="tnum text-lg font-bold tracking-tight text-ink">{pct(m.yesPrice)}</span>
               <Change value={m.change24h} className="w-9 justify-end text-xs" />
               <div className="hidden gap-1.5 sm:flex">
                 <button
                   onClick={() => navigate(tradeLink(event.slug, m.ticker, "yes"))}
-                  className="rounded-md bg-yes-tint px-3 py-1.5 text-xs font-semibold text-yes-strong hover:bg-yes hover:text-white"
+                  className="w-12 rounded-md bg-yes-tint py-1.5 text-xs font-semibold text-yes-strong transition-colors hover:bg-yes hover:text-white"
                 >
                   Yes
                 </button>
                 <button
                   onClick={() => navigate(tradeLink(event.slug, m.ticker, "no"))}
-                  className="rounded-md bg-no-tint px-3 py-1.5 text-xs font-semibold text-no-strong hover:bg-no hover:text-white"
+                  className="w-12 rounded-md bg-no-tint py-1.5 text-xs font-semibold text-no-strong transition-colors hover:bg-no hover:text-white"
                 >
                   No
                 </button>
@@ -57,9 +60,11 @@ function HeroSlide({ event }: { event: EventSummary }) {
             </li>
           ))}
         </ul>
-        <div className="mt-auto flex gap-4 pt-4 text-xs text-muted">
-          <span className="tnum">{volume(event.volume)} vol</span>
-          <span>{closesLabel(event.closeTime)}</span>
+        <div className="mt-auto flex items-center gap-4 pt-4 text-xs text-muted">
+          <span className="tnum font-medium">{volume(event.volume)} vol</span>
+          <Link to={`/events/${event.slug}`} className="ml-auto font-semibold text-ink-2 hover:text-ink">
+            View market
+          </Link>
         </div>
       </div>
       <div className="min-w-0">
@@ -86,7 +91,7 @@ export default function HeroCarousel({ events, loading }: { events: EventSummary
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-line p-5 sm:p-6">
+      <div className="rounded-2xl border border-line bg-card p-5 sm:p-6">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
             <Skeleton className="h-12 w-3/4" />
@@ -108,34 +113,40 @@ export default function HeroCarousel({ events, loading }: { events: EventSummary
       aria-label="Featured markets"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      className="relative rounded-2xl border border-line bg-white p-5 sm:p-6"
+      className="relative overflow-hidden rounded-2xl border border-line bg-card p-5 shadow-card sm:p-6"
     >
       <HeroSlide key={ev.slug} event={ev} />
       {n > 1 && (
         <div className="mt-4 flex items-center justify-between border-t border-line-2 pt-3">
-          <div className="flex gap-1.5">
+          <div className="flex items-center gap-1.5">
             {events.map((e, k) => (
               <button
                 key={e.slug}
                 onClick={() => setI(k)}
                 aria-label={`Show ${e.title}`}
                 aria-current={k === i}
-                className={clsx("h-1.5 rounded-full transition-all", k === i ? "w-6 bg-ink" : "w-1.5 bg-line hover:bg-faint")}
+                className={clsx(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  k === i ? "w-6 bg-ink" : "w-1.5 bg-line-strong hover:bg-faint",
+                )}
               />
             ))}
           </div>
-          <div className="flex gap-1">
+          <div className="flex items-center gap-1">
+            <span className="tnum mr-2 text-xs font-medium text-muted">
+              {Math.min(i, n - 1) + 1} / {n}
+            </span>
             <button
               onClick={() => setI((x) => (x - 1 + n) % n)}
               aria-label="Previous"
-              className="grid size-8 place-items-center rounded-full border border-line hover:bg-surface"
+              className="grid size-8 place-items-center rounded-full border border-line text-ink-2 transition-colors hover:border-line-strong hover:bg-surface hover:text-ink"
             >
               <ChevronLeft className="size-4" />
             </button>
             <button
               onClick={() => setI((x) => (x + 1) % n)}
               aria-label="Next"
-              className="grid size-8 place-items-center rounded-full border border-line hover:bg-surface"
+              className="grid size-8 place-items-center rounded-full border border-line text-ink-2 transition-colors hover:border-line-strong hover:bg-surface hover:text-ink"
             >
               <ChevronRight className="size-4" />
             </button>

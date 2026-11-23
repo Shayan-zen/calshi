@@ -11,7 +11,7 @@ import { STARTING_BALANCE } from "../../shared/types";
 
 function StatCard({ label, value, sub, tone }: { label: string; value: string; sub?: React.ReactNode; tone?: "up" | "down" }) {
   return (
-    <div className="rounded-xl border border-line p-4">
+    <div className="rounded-xl border border-line bg-card p-4 shadow-card">
       <div className="text-[13px] text-muted">{label}</div>
       <div className={clsx("tnum mt-1 text-2xl font-bold tracking-tight", tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-ink")}>
         {value}
@@ -69,12 +69,12 @@ function Portfolio() {
 
       <Section title="Positions" icon={<Briefcase className="size-4" />}>
         {d.positions.length === 0 ? (
-          <div className="rounded-xl border border-line">
+          <div className="rounded-xl border border-line bg-card">
             <EmptyState
               title="No open positions"
               body="Buy Yes or No on any market and it will show up here."
               action={
-                <Link to="/" className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink-2">
+                <Link to="/" className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-on-ink hover:bg-ink-2">
                   Find a market
                 </Link>
               }
@@ -127,7 +127,7 @@ function Portfolio() {
 
       <Section title="Open orders" icon={<ListOrdered className="size-4" />}>
         {openOrders.length === 0 ? (
-          <div className="rounded-xl border border-line px-4 py-6 text-center text-sm text-muted">No resting orders</div>
+          <div className="rounded-xl border border-dashed border-line-strong px-4 py-6 text-center text-sm text-muted">No resting orders</div>
         ) : (
           <OrdersTable orders={openOrders} />
         )}
@@ -135,7 +135,7 @@ function Portfolio() {
 
       <Section title="Settled" icon={<History className="size-4" />}>
         {d.settled.length === 0 ? (
-          <div className="rounded-xl border border-line px-4 py-6 text-center text-sm text-muted">
+          <div className="rounded-xl border border-dashed border-line-strong px-4 py-6 text-center text-sm text-muted">
             Positions in resolved markets will be listed here.
           </div>
         ) : (

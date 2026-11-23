@@ -9,7 +9,7 @@ export default function ActivityPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <PageTitle sub="Every trade across Pilani Predict, updated every few seconds.">Live activity</PageTitle>
-      <div className="rounded-xl border border-line px-4">
+      <div className="rounded-xl border border-line bg-card px-4 shadow-card">
         {activity.isLoading ? (
           <TradeFeedSkeleton rows={10} />
         ) : activity.isError ? (

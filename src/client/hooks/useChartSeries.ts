@@ -30,7 +30,7 @@ export function useChartSeries(event: EventSummary | undefined, range: Range) {
       return {
         key: market.ticker,
         name: event.markets.length === 1 ? "Yes" : market.title,
-        color: event.markets.length === 1 ? "#0a8f63" : color,
+        color: event.markets.length === 1 ? "var(--series-1)" : color,
         points,
       };
     });

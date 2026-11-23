@@ -61,7 +61,7 @@ export default function Comments({ slug }: { slug: string }) {
               onChange={(e) => setBody(e.target.value)}
               rows={2}
               placeholder="Share your take"
-              className="w-full resize-y rounded-lg border border-line px-3 py-2 text-sm placeholder:text-faint focus:border-ink-2/40 focus:outline-none"
+              className="field w-full resize-y rounded-lg px-3 py-2 text-sm"
             />
             <div className="mt-2 flex items-center justify-between">
               <span className={tooLong ? "text-xs text-down" : "text-xs text-faint"}>
@@ -70,9 +70,9 @@ export default function Comments({ slug }: { slug: string }) {
               <button
                 type="submit"
                 disabled={!body.trim() || tooLong || post.isPending}
-                className="flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-sm font-semibold text-white hover:bg-ink-2 disabled:opacity-40"
+                className="flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-sm font-semibold text-on-ink hover:bg-ink-2 disabled:opacity-40"
               >
-                {post.isPending && <Spinner className="text-white" />}
+                {post.isPending && <Spinner className="text-on-ink" />}
                 Post
               </button>
             </div>
@@ -111,7 +111,7 @@ export default function Comments({ slug }: { slug: string }) {
                 <Avatar name={c.userName} url={c.avatarUrl} size={32} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-semibold">{c.userName}</span>
+                    <span className="text-sm font-semibold text-ink">{c.userName}</span>
                     <span className="text-xs text-faint">{relTime(c.createdAt)}</span>
                     {c.canDelete && (
                       <span className="ml-auto flex items-center gap-1">

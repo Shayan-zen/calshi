@@ -1,7 +1,8 @@
-﻿import { useMemo } from "react";
+import { useMemo } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { PricePoint, Range } from "../../shared/types";
 import { SERIES_COLORS } from "../lib/format";
+import { useChartColors } from "../theme";
 
 export interface ChartSeries {
   key: string; // ticker
@@ -65,8 +66,8 @@ function ChartTooltip({
     .filter((x) => x.s)
     .sort((a, b) => b.v - a.v);
   return (
-    <div className="min-w-40 rounded-lg border border-line bg-white px-3 py-2 shadow-lift">
-      <div className="mb-1 text-[11px] text-muted">
+    <div className="min-w-40 rounded-lg border border-line bg-pop px-3 py-2 shadow-pop">
+      <div className="tnum mb-1.5 text-[11px] font-medium text-muted">
         {new Date(Number(label)).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
       </div>
       {items.map(({ s, v }) => (
@@ -95,22 +96,23 @@ export default function PriceChart({
 }) {
   const data = useMemo(() => mergeSeries(series), [series]);
   const hasData = data.length > 0;
+  const colors = useChartColors();
 
   return (
     <div style={{ height }} className="w-full">
       {!hasData ? (
-        <div className="grid h-full place-items-center text-sm text-muted">No trades yet</div>
+        <div className="grid h-full place-items-center rounded-lg border border-dashed border-line text-sm text-muted">No price history yet</div>
       ) : (
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: compact ? 4 : 8, bottom: 0, left: 0 }}>
-            <CartesianGrid vertical={false} stroke="#f0f1f4" strokeDasharray="0" />
+            <CartesianGrid vertical={false} stroke={colors.grid} strokeDasharray="0" />
             <XAxis
               dataKey="t"
               type="number"
               scale="time"
               domain={["dataMin", "dataMax"]}
               tickFormatter={tickFormatter(range)}
-              tick={{ fill: "#9aa0ab", fontSize: 11 }}
+              tick={{ fill: colors.axis, fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               minTickGap={48}
@@ -121,13 +123,13 @@ export default function PriceChart({
               domain={[0, 100]}
               ticks={[0, 25, 50, 75, 100]}
               tickFormatter={(v: number) => `${v}%`}
-              tick={{ fill: "#9aa0ab", fontSize: 11 }}
+              tick={{ fill: colors.axis, fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               width={40}
             />
             <Tooltip
-              cursor={{ stroke: "#0f1115", strokeOpacity: 0.25, strokeDasharray: "3 3" }}
+              cursor={{ stroke: colors.cursor, strokeDasharray: "3 3" }}
               content={(props) => (
                 <ChartTooltip
                   active={props.active}
@@ -144,10 +146,10 @@ export default function PriceChart({
                 dataKey={s.key}
                 name={s.name}
                 type="stepAfter"
-                stroke={s.color}
+                stroke={colors.resolve(s.color)}
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, strokeWidth: 2, stroke: "#fff" }}
+                activeDot={{ r: 4, strokeWidth: 2, stroke: colors.card, fill: colors.resolve(s.color) }}
                 isAnimationActive={false}
                 connectNulls
               />
@@ -171,7 +173,7 @@ export function RangeTabs({ value, onChange }: { value: Range; onChange: (r: Ran
     ["all", "ALL"],
   ];
   return (
-    <div className="flex gap-1" role="tablist" aria-label="Chart range">
+    <div className="flex gap-0.5 rounded-lg bg-surface p-0.5" role="tablist" aria-label="Chart range">
       {ranges.map(([r, label]) => (
         <button
           key={r}
@@ -180,8 +182,8 @@ export function RangeTabs({ value, onChange }: { value: Range; onChange: (r: Ran
           onClick={() => onChange(r)}
           className={
             value === r
-              ? "rounded-md bg-ink px-2.5 py-1 text-xs font-semibold text-white"
-              : "rounded-md px-2.5 py-1 text-xs font-semibold text-muted hover:bg-surface hover:text-ink"
+              ? "rounded-md bg-thumb px-2.5 py-1 text-xs font-semibold text-ink shadow-card"
+              : "rounded-md px-2.5 py-1 text-xs font-semibold text-muted transition-colors hover:text-ink"
           }
         >
           {label}

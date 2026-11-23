@@ -9,7 +9,7 @@ import { useInvalidateTrading, useOrderbook, useOrders, usePortfolio, useUser } 
 import { estimateByBudget, estimateByCount, takerLevels } from "../lib/book";
 import { cents, clampPrice, money } from "../lib/format";
 import { useToast } from "./Toast";
-import { SideBadge, Spinner } from "./ui";
+import { Segmented, SideBadge, Spinner } from "./ui";
 
 type AmountMode = "dollars" | "contracts";
 
@@ -150,11 +150,11 @@ export default function TradeTicket({
   else if (insufficientPosition) submitLabel = heldOnSide ? `You hold ${heldOnSide} ${sideLabel}` : `You don't hold ${sideLabel}`;
 
   return (
-    <div className="rounded-xl border border-line bg-white shadow-card">
+    <div className="rounded-xl border border-line bg-card shadow-card">
       <div className="flex items-start gap-2 px-4 pt-4">
         <div className="min-w-0 flex-1">
-          <div className="truncate text-xs text-muted">{event.title}</div>
-          <div className="mt-0.5 truncate text-base font-semibold">
+          <div className="truncate text-xs font-medium text-muted">{event.title}</div>
+          <div className="mt-0.5 truncate text-base font-semibold tracking-tight text-ink">
             {single ? (
               <>
                 {action === "buy" ? "Buy" : "Sell"} <span className={side === "yes" ? "text-yes-strong" : "text-no-strong"}>{sideLabel}</span>
@@ -165,7 +165,7 @@ export default function TradeTicket({
           </div>
         </div>
         {onClose && (
-          <button onClick={onClose} aria-label="Close" className="-m-1 rounded-md p-1 text-muted hover:bg-surface">
+          <button onClick={onClose} aria-label="Close" className="-m-1 rounded-md p-1 text-muted transition-colors hover:bg-surface hover:text-ink">
             <X className="size-5" />
           </button>
         )}
@@ -179,7 +179,7 @@ export default function TradeTicket({
               key={a}
               onClick={() => setAction(a)}
               className={clsx(
-                "-mb-px border-b-2 pb-2 text-sm font-semibold",
+                "-mb-px border-b-2 pb-2 text-sm font-semibold transition-colors",
                 action === a ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink",
               )}
             >
@@ -190,15 +190,15 @@ export default function TradeTicket({
         <div className="relative pb-1.5">
           <button
             onClick={() => setTypeOpen((o) => !o)}
-            className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-ink-2 hover:bg-surface"
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-ink-2 transition-colors hover:bg-surface hover:text-ink"
             aria-haspopup="listbox"
             aria-expanded={typeOpen}
           >
             {type === "market" ? "Market" : "Limit"}
-            <ChevronDown className="size-3.5" />
+            <ChevronDown className={clsx("size-3.5 transition-transform", typeOpen && "rotate-180")} />
           </button>
           {typeOpen && (
-            <div role="listbox" className="absolute right-0 top-9 z-20 w-36 rounded-lg border border-line bg-white p-1 shadow-pop">
+            <div role="listbox" className="absolute right-0 top-9 z-20 w-36 origin-top-right animate-pop-in rounded-lg border border-line bg-pop p-1 shadow-pop">
               {(["market", "limit"] as OrderType[]).map((t) => (
                 <button
                   key={t}
@@ -209,7 +209,7 @@ export default function TradeTicket({
                     setTypeOpen(false);
                     if (t === "limit") setMode("contracts");
                   }}
-                  className={clsx("block w-full rounded-md px-2.5 py-1.5 text-left text-sm hover:bg-surface", type === t && "font-semibold")}
+                  className={clsx("block w-full rounded-md px-2.5 py-1.5 text-left text-sm text-ink hover:bg-surface", type === t && "font-semibold")}
                 >
                   {t === "market" ? "Market order" : "Limit order"}
                 </button>
@@ -230,13 +230,13 @@ export default function TradeTicket({
                 key={s}
                 onClick={() => onSideChange(s)}
                 className={clsx(
-                  "tnum rounded-lg py-3 text-[15px] font-semibold transition-colors",
+                  "tnum rounded-lg py-3 text-[15px] font-semibold transition-[background-color,color,box-shadow]",
                   s === "yes"
                     ? active
-                      ? "bg-yes text-white"
+                      ? "bg-yes text-white shadow-[0_4px_14px_-6px_var(--yes)]"
                       : "bg-yes-tint text-yes-strong hover:bg-yes-tint-2"
                     : active
-                      ? "bg-no text-white"
+                      ? "bg-no text-white shadow-[0_4px_14px_-6px_var(--no)]"
                       : "bg-no-tint text-no-strong hover:bg-no-tint-2",
                 )}
               >
@@ -249,8 +249,8 @@ export default function TradeTicket({
         {/* Limit price */}
         {type === "limit" && (
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-ink-2">Limit price</label>
-            <div className="flex items-center rounded-lg border border-line">
+            <label className="mb-1.5 block text-xs font-medium text-muted">Limit price</label>
+            <div className="flex items-center rounded-lg border border-line bg-card transition-colors focus-within:border-line-strong">
               <button
                 onClick={() => setLimitPrice((p) => clampPrice(p - 1))}
                 className="grid size-11 place-items-center text-muted hover:text-ink"
@@ -265,7 +265,7 @@ export default function TradeTicket({
                   const v = parseInt(e.target.value.replace(/\D/g, ""), 10);
                   setLimitPrice(Number.isFinite(v) ? Math.min(99, Math.max(1, v)) : 1);
                 }}
-                className="tnum w-full min-w-0 bg-transparent text-center text-lg font-semibold focus:outline-none"
+                className="tnum w-full min-w-0 bg-transparent text-center text-lg font-semibold text-ink focus:outline-none"
                 aria-label="Limit price in cents"
               />
               <span className="pr-1 text-sm text-muted">¢</span>
@@ -283,24 +283,23 @@ export default function TradeTicket({
         {/* Amount */}
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label htmlFor="ticket-amount" className="text-sm font-medium text-ink-2">
+            <label htmlFor="ticket-amount" className="text-xs font-medium text-muted">
               {mode === "dollars" ? "Amount" : "Contracts"}
             </label>
             {type === "market" && action === "buy" && (
-              <div className="flex rounded-md bg-surface p-0.5 text-xs font-semibold">
-                {(["dollars", "contracts"] as AmountMode[]).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => {
-                      setMode(m);
-                      setAmountText("");
-                    }}
-                    className={clsx("rounded px-2 py-0.5", mode === m ? "bg-white text-ink shadow-card" : "text-muted")}
-                  >
-                    {m === "dollars" ? "$" : "Contracts"}
-                  </button>
-                ))}
-              </div>
+              <Segmented
+                size="xs"
+                label="Amount in"
+                value={mode}
+                onChange={(m) => {
+                  setMode(m);
+                  setAmountText("");
+                }}
+                options={[
+                  ["dollars", "Dollars"],
+                  ["contracts", "Contracts"],
+                ]}
+              />
             )}
           </div>
           <div className="relative">
@@ -316,7 +315,7 @@ export default function TradeTicket({
               }}
               onKeyDown={(e) => e.key === "Enter" && !disabled && submit()}
               className={clsx(
-                "tnum h-12 w-full rounded-lg border border-line bg-white text-right text-xl font-semibold placeholder:text-faint focus:border-ink-2/40 focus:outline-none",
+                "field tnum h-12 w-full rounded-lg text-right text-xl font-semibold",
                 mode === "dollars" ? "pl-7 pr-3" : "px-3",
               )}
             />
@@ -326,7 +325,7 @@ export default function TradeTicket({
               <button
                 key={v}
                 onClick={() => setAmountText(String((Number(amountText) || 0) + v))}
-                className="tnum rounded-md border border-line px-2 py-1 text-xs font-medium text-ink-2 hover:bg-surface"
+                className="tnum rounded-full border border-line px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-line-strong hover:bg-surface hover:text-ink"
               >
                 +{mode === "dollars" ? `$${v}` : v}
               </button>
@@ -335,13 +334,13 @@ export default function TradeTicket({
               <>
                 <button
                   onClick={() => setAmountText(String(Math.floor(heldOnSide / 2) || 1))}
-                  className="rounded-md border border-line px-2 py-1 text-xs font-medium text-ink-2 hover:bg-surface"
+                  className="rounded-full border border-line px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-line-strong hover:bg-surface hover:text-ink"
                 >
                   Half
                 </button>
                 <button
                   onClick={() => setAmountText(String(heldOnSide))}
-                  className="rounded-md border border-line px-2 py-1 text-xs font-medium text-ink-2 hover:bg-surface"
+                  className="rounded-full border border-line px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-line-strong hover:bg-surface hover:text-ink"
                 >
                   Max ({heldOnSide})
                 </button>
@@ -351,24 +350,12 @@ export default function TradeTicket({
         </div>
 
         {/* Summary */}
-        <div className="space-y-1.5 rounded-lg bg-surface px-3 py-2.5">
-          <Row label={type === "limit" ? "Limit price" : "Avg price"} value={est?.avgPrice != null ? cents(est.avgPrice) : "—"} />
-          <Row label="Contracts" value={count ? count.toLocaleString() : "—"} />
-          <Row label={action === "buy" ? "Cost" : "Proceeds"} value={count ? money(cost) : "—"} strong />
-          {action === "buy" ? (
-            <div className="flex items-center justify-between pt-1 text-sm">
-              <span className="text-muted">Payout if {sideLabel} wins</span>
-              <span className="tnum text-base font-bold text-yes-strong">
-                {count ? money(payout) : "—"}
-                {count > 0 && cost > 0 && (
-                  <span className="ml-1 text-xs font-medium">(+{Math.round(((payout - cost) / cost) * 100)}%)</span>
-                )}
-              </span>
-            </div>
-          ) : (
-            position &&
-            position.side === side &&
-            count > 0 && (
+        <div className="overflow-hidden rounded-lg border border-line-2 bg-surface/60">
+          <div className="space-y-1.5 px-3 py-2.5">
+            <Row label={type === "limit" ? "Limit price" : "Avg price"} value={est?.avgPrice != null ? cents(est.avgPrice) : "—"} />
+            <Row label="Contracts" value={count ? count.toLocaleString() : "—"} />
+            <Row label={action === "buy" ? "Cost" : "Proceeds"} value={count ? money(cost) : "—"} strong />
+            {action === "sell" && position && position.side === side && count > 0 && (
               <Row
                 label="Realized P&L (est.)"
                 value={
@@ -377,27 +364,51 @@ export default function TradeTicket({
                   </span>
                 }
               />
-            )
+            )}
+          </div>
+          {action === "buy" && (
+            <div
+              className={clsx(
+                "flex items-end justify-between gap-3 border-t border-line-2 px-3 py-2.5",
+                count > 0 && (side === "yes" ? "bg-yes-tint/70" : "bg-no-tint/70"),
+              )}
+            >
+              <div className="min-w-0">
+                <div className="text-xs font-medium text-muted">Payout if {sideLabel} wins</div>
+                {count > 0 && cost > 0 && (
+                  <div className="tnum mt-0.5 text-xs font-semibold text-up">
+                    +{money(payout - cost)} profit ({Math.round(((payout - cost) / cost) * 100)}%)
+                  </div>
+                )}
+              </div>
+              <span
+                className={clsx(
+                  "tnum text-2xl font-bold leading-none tracking-tight",
+                  count ? (side === "yes" ? "text-yes-strong" : "text-no-strong") : "text-faint",
+                )}
+              >
+                {count ? money(payout) : "$0.00"}
+              </span>
+            </div>
           )}
           {type === "market" && est?.exhausted && (
-            <p className="pt-1 text-xs text-down">Not enough liquidity in the book to fill all of this.</p>
+            <p className="border-t border-line-2 px-3 py-2 text-xs text-down">Not enough liquidity in the book to fill all of this.</p>
           )}
           {type === "limit" && est && est.count > 0 && (
-            <p className="pt-1 text-xs text-muted">
+            <p className="border-t border-line-2 px-3 py-2 text-xs text-muted">
               {est.immediate > 0
                 ? `About ${est.immediate} fill now; the rest rests on the book.`
                 : "Rests on the book until someone matches it."}
             </p>
           )}
         </div>
-
         {/* Submit */}
         {user ? (
           <button
             onClick={submit}
             disabled={disabled}
             className={clsx(
-              "flex h-12 w-full items-center justify-center gap-2 rounded-lg text-[15px] font-semibold text-white transition-colors disabled:opacity-45",
+              "flex h-12 w-full items-center justify-center gap-2 rounded-lg text-[15px] font-semibold text-white transition-[background-color,transform] active:scale-[0.99] disabled:opacity-45 disabled:active:scale-100",
               side === "yes" ? "bg-yes hover:bg-yes-strong" : "bg-no hover:bg-no-strong",
             )}
           >
@@ -407,7 +418,7 @@ export default function TradeTicket({
         ) : (
           <Link
             to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
-            className="flex h-12 w-full items-center justify-center rounded-lg bg-ink text-[15px] font-semibold text-white hover:bg-ink-2"
+            className="flex h-12 w-full items-center justify-center rounded-lg bg-ink text-[15px] font-semibold text-on-ink hover:bg-ink-2"
           >
             Log in to trade
           </Link>
@@ -444,10 +455,10 @@ export function PositionAndOrders({ market }: { market: MarketSummary }) {
   if (!pos && open.length === 0) return null;
 
   return (
-    <div className="space-y-3 rounded-xl border border-line bg-white p-4">
+    <div className="space-y-3 rounded-xl border border-line bg-card p-4 shadow-card">
       {pos && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold">Your position</h3>
+          <h3 className="mb-2 text-sm font-semibold text-ink">Your position</h3>
           <div className="flex items-center gap-2 text-sm">
             <SideBadge side={pos.side} />
             <span className="tnum font-semibold">{pos.qty.toLocaleString()}</span>
@@ -470,7 +481,7 @@ export function PositionAndOrders({ market }: { market: MarketSummary }) {
       )}
       {open.length > 0 && (
         <div className={clsx(pos && "border-t border-line-2 pt-3")}>
-          <h3 className="mb-2 text-sm font-semibold">Open orders</h3>
+          <h3 className="mb-2 text-sm font-semibold text-ink">Open orders</h3>
           <ul className="space-y-2">
             {open.map((o) => (
               <li key={o.id} className="flex items-center gap-2 text-sm">
@@ -483,7 +494,7 @@ export function PositionAndOrders({ market }: { market: MarketSummary }) {
                 <button
                   onClick={() => cancel.mutate(o.id)}
                   disabled={cancel.isPending && cancel.variables === o.id}
-                  className="ml-auto rounded-md border border-line px-2 py-1 text-xs font-medium hover:border-down hover:text-down disabled:opacity-50"
+                  className="ml-auto rounded-md border border-line px-2 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-down hover:text-down disabled:opacity-50"
                 >
                   Cancel
                 </button>

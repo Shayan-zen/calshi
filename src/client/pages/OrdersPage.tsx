@@ -19,7 +19,7 @@ function Orders() {
             onClick={() => setStatus(s)}
             className={clsx(
               "rounded-full px-3.5 py-1.5 text-sm font-medium",
-              status === s ? "bg-ink text-white" : "text-muted hover:bg-surface hover:text-ink",
+              status === s ? "bg-ink text-on-ink" : "text-muted hover:bg-surface hover:text-ink",
             )}
           >
             {s === "open" ? "Open" : "All orders"}
@@ -31,7 +31,7 @@ function Orders() {
       ) : orders.isError ? (
         <ErrorState error={orders.error} onRetry={() => orders.refetch()} />
       ) : list.length === 0 ? (
-        <div className="rounded-xl border border-line">
+        <div className="rounded-xl border border-line bg-card">
           <EmptyState
             icon={<ListOrdered className="size-5" />}
             title={status === "open" ? "No open orders" : "No orders yet"}

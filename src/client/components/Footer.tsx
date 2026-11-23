@@ -3,7 +3,7 @@ import Logo from "./Logo";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-line bg-white">
+    <footer className="border-t border-line bg-bg">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <Logo />
@@ -13,8 +13,8 @@ export default function Footer() {
           money or financial advice.
         </p>
         <div className="flex gap-4 text-[13px]">
-          <Link to="/leaderboard" className="hover:text-ink">Leaderboard</Link>
-          <Link to="/activity" className="hover:text-ink">Activity</Link>
+          <Link to="/leaderboard" className="transition-colors hover:text-ink">Leaderboard</Link>
+          <Link to="/activity" className="transition-colors hover:text-ink">Activity</Link>
         </div>
       </div>
     </footer>
