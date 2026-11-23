@@ -6,7 +6,7 @@ export const BOT_FLOW_ID = "bot-flow";
 export const BOT_IDS = [BOT_MM_ID, BOT_FLOW_ID];
 
 /** Users never shown publicly: excluded from the leaderboard, shown as "Anonymous" in trade feeds and comments. */
-const HIDDEN_EMAILS = new Set(["f20250983@pilani.bits-pilani.ac.in", "f20250606@pilani.bits-pilani.ac.in"]);
+const HIDDEN_EMAILS = new Set(["f20250935@pilani.bits-pilani.ac.in", "f20250983@pilani.bits-pilani.ac.in"]);
 export const isHiddenEmail = (email: string | null | undefined): boolean => !!email && HIDDEN_EMAILS.has(email.toLowerCase());
 export const ANON_NAME = "Anonymous";
 
