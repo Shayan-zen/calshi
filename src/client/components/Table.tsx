@@ -24,8 +24,8 @@ export function Th({ children, right, className }: { children?: ReactNode; right
   );
 }
 
-export function Td({ children, right, className }: { children?: ReactNode; right?: boolean; className?: string }) {
+export function Td({ children, right, className, colSpan }: { children?: ReactNode; right?: boolean; className?: string; colSpan?: number }) {
   return (
-    <td className={clsx("border-b border-line-2 px-4 py-3 align-middle", right && "tnum text-right", className)}>{children}</td>
+    <td colSpan={colSpan} className={clsx("border-b border-line-2 px-4 py-3 align-middle", right && "tnum text-right", className)}>{children}</td>
   );
 }

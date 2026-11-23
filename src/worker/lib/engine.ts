@@ -449,7 +449,11 @@ export async function closeMarket(db: D1Database, ticker: string): Promise<void>
 }
 
 export async function settleMarket(db: D1Database, ticker: string, result: Side): Promise<void> {
-  const now = Date.now();
+  await db.batch(settleStatements(db, ticker, result, Date.now()));
+}
+
+/** All statements that settle one market (guarded on it not being settled yet). */
+export function settleStatements(db: D1Database, ticker: string, result: Side, now: number): D1PreparedStatement[] {
   const winQty = result === "yes" ? "yes_qty" : "no_qty";
   const st: D1PreparedStatement[] = [
     db.prepare(GUARD(`markets WHERE ticker = ? AND status != 'settled'`)).bind(ticker),
@@ -486,7 +490,35 @@ export async function settleMarket(db: D1Database, ticker: string, result: Side)
       .bind(result, now, result === "yes" ? 100 : 0, ticker),
     db.prepare(`INSERT INTO price_history (ticker, t, p) VALUES (?, ?, ?)`).bind(ticker, now, result === "yes" ? 100 : 0),
   );
-  await db.batch(st);
+  return st;
+}
+
+/**
+ * Statements that void a whole event: cancel + refund every open order, refund each holder's
+ * remaining cost basis in cash, then delete the event and every row that references it.
+ */
+export function voidEventStatements(db: D1Database, slug: string): D1PreparedStatement[] {
+  const inEvent = `ticker IN (SELECT ticker FROM markets WHERE event_slug = ?)`;
+  return [
+    db.prepare(GUARD(`events WHERE slug = ?`)).bind(slug),
+    ...cancelStatements(db, inEvent, [slug]),
+    db
+      .prepare(
+        `UPDATE users SET balance = balance + (
+           SELECT COALESCE(SUM(p.yes_cost + p.no_cost), 0) FROM positions p
+           WHERE p.user_id = users.id AND p.${inEvent})
+         WHERE id IN (SELECT p.user_id FROM positions p WHERE p.${inEvent} AND (p.yes_cost + p.no_cost) > 0)`,
+      )
+      .bind(slug, slug),
+    db.prepare(`DELETE FROM positions WHERE ${inEvent}`).bind(slug),
+    db.prepare(`DELETE FROM orders WHERE ${inEvent}`).bind(slug),
+    db.prepare(`DELETE FROM trades WHERE ${inEvent}`).bind(slug),
+    db.prepare(`DELETE FROM price_history WHERE ${inEvent}`).bind(slug),
+    db.prepare(`DELETE FROM settlements WHERE ${inEvent}`).bind(slug),
+    db.prepare(`DELETE FROM comments WHERE event_slug = ?`).bind(slug),
+    db.prepare(`DELETE FROM markets WHERE event_slug = ?`).bind(slug),
+    db.prepare(`DELETE FROM events WHERE slug = ?`).bind(slug),
+  ];
 }
 
 export async function cancelOrder(db: D1Database, orderId: string): Promise<void> {

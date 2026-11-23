@@ -230,4 +230,61 @@ export const STARTING_BALANCE = 100_000; // $1,000.00 play money
  *   POST  /api/admin/markets/:ticker/close          -> { market: MarketSummary }   (stop trading, cancel open orders + refund)
  *   POST  /api/admin/markets/:ticker/resolve { result: Side } -> { market: MarketSummary }  (settles: pays 100¢/winning contract, cancels orders)
  *   GET   /api/admin/stats                          -> { users: number; trades: number; volume: number; openMarkets: number }
+ *   PATCH  /api/admin/events/:slug UpdateEventRequest       -> { event: EventDetail }  (closeTime also moves its open markets)
+ *   POST   /api/admin/events/:slug/markets AddMarketRequest -> { event: EventDetail }  (adds an outcome)
+ *   POST   /api/admin/events/:slug/resolve ResolveEventRequest -> { event: EventDetail }  (winner YES, every other outcome NO)
+ *   DELETE /api/admin/events/:slug                          -> { ok: true }  (void: refund orders + cost basis, delete everything)
+ *   GET    /api/admin/users?q=                              -> { users: AdminUser[] }
+ *   POST   /api/admin/users/:id/credit CreditUserRequest    -> { user: AdminUser }
+ *   GET    /api/admin/comments                              -> { comments: AdminComment[] }  (newest 100, all events)
  */
+
+/** Every field optional; only the provided ones change. */
+export interface UpdateEventRequest {
+  title?: string;
+  category?: string;
+  description?: string;
+  rules?: string;
+  icon?: string | null;
+  imageUrl?: string | null;
+  closeTime?: number;
+  mutuallyExclusive?: boolean;
+}
+
+export interface AddMarketRequest {
+  title: string;
+  subtitle?: string | null;
+  initialPrice: number; // 1..99
+}
+
+export interface ResolveEventRequest {
+  winnerTicker: string;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  balance: number; // cents
+  totalValue: number; // balance + locked in orders + positions marked to market, cents
+  volume: number; // contracts traded
+  createdAt: number;
+  isAdmin: boolean;
+}
+
+export interface CreditUserRequest {
+  amount: number; // cents, non-zero; negative removes (balance must stay >= 0)
+  reason?: string;
+}
+
+export interface AdminComment extends Comment {
+  eventTitle: string;
+}
+
+export interface AdminStats {
+  users: number;
+  trades: number;
+  volume: number;
+  openMarkets: number;
+}

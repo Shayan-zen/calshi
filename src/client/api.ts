@@ -1,4 +1,11 @@
 import type {
+  AddMarketRequest,
+  AdminComment,
+  AdminStats,
+  AdminUser,
+  CreditUserRequest,
+  ResolveEventRequest,
+  UpdateEventRequest,
   Category,
   Comment,
   CreateEventRequest,
@@ -121,6 +128,19 @@ export const api = {
       method: "POST",
       json: { result },
     }),
-  adminStats: () =>
-    request<{ users: number; trades: number; volume: number; openMarkets: number }>("/admin/stats"),
+  adminStats: () => request<AdminStats>("/admin/stats"),
+  adminUpdateEvent: (slug: string, req: UpdateEventRequest) =>
+    request<{ event: EventDetail }>(`/admin/events/${encodeURIComponent(slug)}`, { method: "PATCH", json: req }),
+  adminAddMarket: (slug: string, req: AddMarketRequest) =>
+    request<{ event: EventDetail }>(`/admin/events/${encodeURIComponent(slug)}/markets`, { method: "POST", json: req }),
+  adminResolveEvent: (slug: string, winnerTicker: string) =>
+    request<{ event: EventDetail }>(`/admin/events/${encodeURIComponent(slug)}/resolve`, {
+      method: "POST",
+      json: { winnerTicker } satisfies ResolveEventRequest,
+    }),
+  adminDeleteEvent: (slug: string) => request<{ ok: true }>(`/admin/events/${encodeURIComponent(slug)}`, { method: "DELETE" }),
+  adminUsers: (q?: string) => request<{ users: AdminUser[] }>(`/admin/users${qs({ q })}`),
+  adminCredit: (id: string, req: CreditUserRequest) =>
+    request<{ user: AdminUser }>(`/admin/users/${encodeURIComponent(id)}/credit`, { method: "POST", json: req }),
+  adminComments: () => request<{ comments: AdminComment[] }>("/admin/comments"),
 };

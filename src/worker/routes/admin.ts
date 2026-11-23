@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { type AppEnv, requireAdmin } from "../lib/session";
-import { closeMarket, settleMarket } from "../lib/engine";
+import type { AdminComment, AdminUser, Side } from "../../shared/types";
+import { type AppEnv, type UserRow, isAdminEmail, requireAdmin } from "../lib/session";
+import { closeMarket, settleMarket, settleStatements, voidEventStatements } from "../lib/engine";
 import { quoteEvents } from "../lib/bot";
-import { eventDetail, marketSummary } from "../lib/markets";
-import { HttpError, bad, notFound, parseBody, slugify } from "../lib/util";
+import { type EventRow, currentPrices, eventDetail, marketSummary } from "../lib/markets";
+import { HttpError, bad, isConstraintError, notFound, parseBody, slugify } from "../lib/util";
 
 export const admin = new Hono<AppEnv>();
 
@@ -113,6 +114,249 @@ admin.post("/admin/markets/:ticker/resolve", async (c) => {
     throw e;
   }
   return c.json({ market: await marketSummary(c.env.DB, ticker) });
+});
+
+// ---------------------------------------------------------------------------
+// Event management
+
+async function eventOr404(db: D1Database, slug: string): Promise<EventRow> {
+  const e = await db.prepare(`SELECT * FROM events WHERE slug = ?`).bind(slug).first<EventRow>();
+  if (!e) throw notFound("Event not found");
+  return e;
+}
+
+const updateSchema = z.object({
+  title: z.string().trim().min(5).max(200).optional(),
+  category: z.string().trim().min(2).max(40).optional(),
+  description: z.string().trim().max(5000).optional(),
+  rules: z.string().trim().max(5000).optional(),
+  icon: z.string().trim().max(16).nullish(),
+  imageUrl: z.string().trim().url().max(500).nullish().or(z.literal("")),
+  closeTime: z.number().int().optional(),
+  mutuallyExclusive: z.boolean().optional(),
+});
+
+admin.patch("/admin/events/:slug", async (c) => {
+  const slug = c.req.param("slug");
+  const db = c.env.DB;
+  const body = await parseBody(c, updateSchema);
+  const e = await eventOr404(db, slug);
+  const now = Date.now();
+  const closeChanged = body.closeTime !== undefined && body.closeTime !== e.close_time;
+  if (closeChanged && body.closeTime! <= now + 60_000) throw bad("closeTime must be in the future");
+
+  const st: D1PreparedStatement[] = [
+    db
+      .prepare(
+        `UPDATE events SET title = ?, category = ?, description = ?, rules = ?, icon = ?, image_url = ?, close_time = ?, mutually_exclusive = ?
+         WHERE slug = ?`,
+      )
+      .bind(
+        body.title ?? e.title,
+        body.category ?? e.category,
+        body.description ?? e.description,
+        body.rules ?? e.rules,
+        body.icon !== undefined ? body.icon || null : e.icon,
+        body.imageUrl !== undefined ? body.imageUrl || null : e.image_url,
+        body.closeTime ?? e.close_time,
+        body.mutuallyExclusive !== undefined ? (body.mutuallyExclusive ? 1 : 0) : e.mutually_exclusive,
+        slug,
+      ),
+  ];
+  if (closeChanged) st.push(db.prepare(`UPDATE markets SET close_time = ? WHERE event_slug = ? AND status = 'open'`).bind(body.closeTime!, slug));
+  await db.batch(st);
+  return c.json({ event: await eventDetail(db, slug) });
+});
+
+const addMarketSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  subtitle: z.string().trim().max(200).nullish(),
+  initialPrice: z.number().int().min(1).max(99),
+});
+
+admin.post("/admin/events/:slug/markets", async (c) => {
+  const slug = c.req.param("slug");
+  const db = c.env.DB;
+  const body = await parseBody(c, addMarketSchema);
+  const e = await eventOr404(db, slug);
+  const now = Date.now();
+  if (e.close_time <= now) throw bad("Event has already closed — extend its close time first");
+
+  const prefix = tickerPrefix(slug);
+  const [existing, order] = await Promise.all([
+    db.prepare(`SELECT ticker FROM markets WHERE ticker LIKE ?`).bind(prefix + "%").all<{ ticker: string }>(),
+    db.prepare(`SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM markets WHERE event_slug = ?`).bind(slug).first<{ n: number }>(),
+  ]);
+  const taken = new Set(existing.results.map((r) => r.ticker));
+  const base = `${prefix}-${(slugify(body.title).split("-").slice(0, 2).join("-") || "M").toUpperCase()}`;
+  let ticker = base;
+  for (let i = 2; taken.has(ticker); i++) ticker = `${base}-${i}`;
+
+  await db.batch([
+    db
+      .prepare(
+        `INSERT INTO markets (ticker, event_slug, title, subtitle, sort_order, status, fair_price, close_time, created_at, last_point_at)
+         VALUES (?, ?, ?, ?, ?, 'open', ?, ?, ?, ?)`,
+      )
+      .bind(ticker, slug, body.title, body.subtitle ?? null, order?.n ?? 0, body.initialPrice, e.close_time, now, now),
+    db.prepare(`INSERT INTO price_history (ticker, t, p) VALUES (?, ?, ?)`).bind(ticker, now, body.initialPrice),
+  ]);
+  try {
+    await quoteEvents(db, [slug], { walk: false, flow: false });
+  } catch (err) {
+    console.error("initial quotes failed", err);
+  }
+  return c.json({ event: await eventDetail(db, slug) });
+});
+
+admin.post("/admin/events/:slug/resolve", async (c) => {
+  const slug = c.req.param("slug");
+  const db = c.env.DB;
+  const { winnerTicker } = await parseBody(c, z.object({ winnerTicker: z.string().trim().min(1).max(80) }));
+  await eventOr404(db, slug);
+  const { results: markets } = await db
+    .prepare(`SELECT ticker, status, result FROM markets WHERE event_slug = ?`)
+    .bind(slug)
+    .all<{ ticker: string; status: string; result: Side | null }>();
+  if (!markets.some((m) => m.ticker === winnerTicker)) throw bad("Winner is not an outcome of this event");
+  const now = Date.now();
+  const st: D1PreparedStatement[] = [];
+  for (const m of markets) {
+    const result: Side = m.ticker === winnerTicker ? "yes" : "no";
+    if (m.status === "settled") {
+      if (m.result !== result) throw bad(`${m.ticker} is already settled ${m.result === "yes" ? "Yes" : "No"}`);
+      continue;
+    }
+    st.push(...settleStatements(db, m.ticker, result, now));
+  }
+  if (!st.length) throw bad("Every outcome is already settled");
+  try {
+    await db.batch(st);
+  } catch (e) {
+    if (isConstraintError(e)) throw new HttpError(409, "Event changed during settlement — retry");
+    throw e;
+  }
+  return c.json({ event: await eventDetail(db, slug) });
+});
+
+admin.delete("/admin/events/:slug", async (c) => {
+  const slug = c.req.param("slug");
+  const db = c.env.DB;
+  await eventOr404(db, slug);
+  try {
+    await db.batch(voidEventStatements(db, slug));
+  } catch (e) {
+    if (isConstraintError(e)) throw new HttpError(409, "Event changed while voiding — retry");
+    throw e;
+  }
+  return c.json({ ok: true });
+});
+
+// ---------------------------------------------------------------------------
+// Users
+
+async function adminUsers(db: D1Database, env: Env, where: string, binds: unknown[], limit: number): Promise<AdminUser[]> {
+  const { results: users } = await db
+    .prepare(`SELECT * FROM users WHERE is_bot = 0 AND (${where}) ORDER BY created_at DESC LIMIT ${limit}`)
+    .bind(...binds)
+    .all<UserRow>();
+  if (!users.length) return [];
+  const ids = JSON.stringify(users.map((u) => u.id));
+  const [locked, pos] = await Promise.all([
+    db
+      .prepare(
+        `SELECT user_id, SUM(remaining * price) AS v FROM orders
+         WHERE status = 'open' AND action = 'buy' AND user_id IN (SELECT value FROM json_each(?)) GROUP BY user_id`,
+      )
+      .bind(ids)
+      .all<{ user_id: string; v: number }>(),
+    db
+      .prepare(
+        `SELECT user_id, ticker, yes_qty, no_qty FROM positions
+         WHERE (yes_qty > 0 OR no_qty > 0) AND user_id IN (SELECT value FROM json_each(?))`,
+      )
+      .bind(ids)
+      .all<{ user_id: string; ticker: string; yes_qty: number; no_qty: number }>(),
+  ]);
+  const prices = await currentPrices(db, [...new Set(pos.results.map((p) => p.ticker))]);
+  const lockedBy = new Map(locked.results.map((r) => [r.user_id, r.v]));
+  const posVal = new Map<string, number>();
+  for (const p of pos.results) {
+    const y = prices.get(p.ticker) ?? 50;
+    posVal.set(p.user_id, (posVal.get(p.user_id) ?? 0) + p.yes_qty * y + p.no_qty * (100 - y));
+  }
+  return users.map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    avatarUrl: u.avatar_url,
+    balance: u.balance,
+    totalValue: Math.round(u.balance + (lockedBy.get(u.id) ?? 0) + (posVal.get(u.id) ?? 0)),
+    volume: u.volume,
+    createdAt: u.created_at,
+    isAdmin: !!u.is_admin || isAdminEmail(env, u.email),
+  }));
+}
+
+admin.get("/admin/users", async (c) => {
+  const q = (c.req.query("q") ?? "").trim().toLowerCase().slice(0, 100);
+  const like = `%${q.replace(/[\\%_]/g, (ch) => "\\" + ch)}%`;
+  const users = await adminUsers(
+    c.env.DB,
+    c.env,
+    `?1 = '' OR LOWER(name) LIKE ?2 ESCAPE '\\' OR LOWER(email) LIKE ?2 ESCAPE '\\'`,
+    [q, like],
+    200,
+  );
+  return c.json({ users });
+});
+
+admin.post("/admin/users/:id/credit", async (c) => {
+  const id = c.req.param("id");
+  const db = c.env.DB;
+  const body = await parseBody(
+    c,
+    z.object({
+      amount: z.number().int().refine((n) => n !== 0, "must not be zero").refine((n) => Math.abs(n) <= 100_000_000, "is too large"),
+      reason: z.string().trim().max(200).optional(),
+    }),
+  );
+  const u = await db.prepare(`SELECT id, balance FROM users WHERE id = ? AND is_bot = 0`).bind(id).first<{ id: string; balance: number }>();
+  if (!u) throw notFound("User not found");
+  if (u.balance + body.amount < 0) throw bad("Balance can't go below $0");
+  try {
+    await db.prepare(`UPDATE users SET balance = balance + ? WHERE id = ?`).bind(body.amount, id).run();
+  } catch (e) {
+    if (isConstraintError(e)) throw bad("Balance can't go below $0");
+    throw e;
+  }
+  console.log("admin credit", { by: c.get("user")?.row.id, user: id, amount: body.amount, reason: body.reason ?? null });
+  const [user] = await adminUsers(db, c.env, `id = ?`, [id], 1);
+  return c.json({ user });
+});
+
+// ---------------------------------------------------------------------------
+// Comment moderation
+
+admin.get("/admin/comments", async (c) => {
+  const viewer = c.get("user");
+  const { results } = await c.env.DB.prepare(
+    `SELECT c.*, u.name AS user_name, u.avatar_url, e.title AS event_title
+     FROM comments c JOIN users u ON u.id = c.user_id JOIN events e ON e.slug = c.event_slug
+     ORDER BY c.created_at DESC LIMIT 100`,
+  ).all<{ id: string; event_slug: string; user_id: string; body: string; created_at: number; user_name: string; avatar_url: string | null; event_title: string }>();
+  const comments: AdminComment[] = results.map((r) => ({
+    id: r.id,
+    eventSlug: r.event_slug,
+    eventTitle: r.event_title,
+    userId: r.user_id,
+    userName: r.user_name,
+    avatarUrl: r.avatar_url,
+    body: r.body,
+    createdAt: r.created_at,
+    canDelete: !!viewer?.isAdmin,
+  }));
+  return c.json({ comments });
 });
 
 admin.get("/admin/stats", async (c) => {

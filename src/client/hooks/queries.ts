@@ -17,6 +17,8 @@ export const qk = {
   portfolio: ["portfolio"] as const,
   orders: (status: "open" | "all", ticker?: string) => ["orders", status, ticker ?? null] as const,
   adminStats: ["adminStats"] as const,
+  adminUsers: (q: string) => ["adminUsers", q] as const,
+  adminComments: ["adminComments"] as const,
 };
 
 export function useMe() {
