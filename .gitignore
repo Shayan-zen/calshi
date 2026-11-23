@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.env
+client_secret*.json
+*.log
+seed/seed.sql
+worker-configuration.d.ts.bak
+.DS_Store
