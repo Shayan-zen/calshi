@@ -148,6 +148,12 @@ CREATE TABLE comments (
 );
 CREATE INDEX idx_comments_event ON comments(event_slug, created_at);
 
+-- Never holds rows. Batches include `INSERT INTO guard (v) SELECT NULL WHERE NOT EXISTS (<expected state>)`
+-- so that a stale read makes the NOT NULL constraint fail and the whole batch roll back.
+CREATE TABLE guard (
+  v INTEGER NOT NULL
+);
+
 CREATE TABLE meta (
   key    TEXT PRIMARY KEY,
   value  TEXT NOT NULL

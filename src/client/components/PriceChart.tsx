@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { PricePoint, Range } from "../../shared/types";
 import { SERIES_COLORS } from "../lib/format";
@@ -53,7 +53,7 @@ function ChartTooltip({
   series,
 }: {
   active?: boolean;
-  payload?: Array<{ dataKey?: unknown; value?: unknown }>;
+  payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown }>;
   label?: unknown;
   series: ChartSeries[];
 }) {
@@ -131,7 +131,7 @@ export default function PriceChart({
               content={(props) => (
                 <ChartTooltip
                   active={props.active}
-                  payload={props.payload as Array<{ dataKey?: unknown; value?: unknown }> | undefined}
+                  payload={props.payload as ReadonlyArray<{ dataKey?: unknown; value?: unknown }> | undefined}
                   label={props.label}
                   series={series}
                 />
@@ -190,3 +190,4 @@ export function RangeTabs({ value, onChange }: { value: Range; onChange: (r: Ran
     </div>
   );
 }
+

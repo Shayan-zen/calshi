@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Outlet, Route, Routes, useLocation } from "react-router";
+import { Navigate, Outlet, Route, Routes, useLocation, useSearchParams } from "react-router";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
@@ -21,6 +21,15 @@ function ScrollToTop() {
   return null;
 }
 
+/** OAuth callback failures land on "/?auth_error=..."; show them on the login page. */
+function AuthErrorRedirect() {
+  const [params] = useSearchParams();
+  const { pathname } = useLocation();
+  const err = params.get("auth_error");
+  if (!err || pathname === "/login") return null;
+  return <Navigate replace to={`/login?auth_error=${encodeURIComponent(err)}`} />;
+}
+
 function Layout() {
   return (
     <div className="flex min-h-dvh flex-col">
@@ -37,6 +46,7 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
+      <AuthErrorRedirect />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<Layout />}>
