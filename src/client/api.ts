@@ -1,6 +1,7 @@
 import type {
   AddMarketRequest,
   AdminComment,
+  AdminEntry,
   AdminStats,
   AdminUser,
   CreditUserRequest,
@@ -143,4 +144,8 @@ export const api = {
   adminCredit: (id: string, req: CreditUserRequest) =>
     request<{ user: AdminUser }>(`/admin/users/${encodeURIComponent(id)}/credit`, { method: "POST", json: req }),
   adminComments: () => request<{ comments: AdminComment[] }>("/admin/comments"),
+  adminAdmins: () => request<{ admins: AdminEntry[] }>("/admin/admins"),
+  adminAddAdmin: (email: string) => request<{ admins: AdminEntry[] }>("/admin/admins", { method: "POST", json: { email } }),
+  adminRemoveAdmin: (email: string) =>
+    request<{ admins: AdminEntry[] }>(`/admin/admins/${encodeURIComponent(email)}`, { method: "DELETE" }),
 };

@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AdminComment, AdminUser, Side } from "../../shared/types";
-import { type AppEnv, type UserRow, isAdminEmail, requireAdmin } from "../lib/session";
+import { type AppEnv, type UserRow, isAdminEmail, isAllowedEmail, requireAdmin } from "../lib/session";
+import type { AdminEntry } from "../../shared/types";
 import { closeMarket, settleMarket, settleStatements, voidEventStatements } from "../lib/engine";
 import { quoteEvents } from "../lib/bot";
 import { type EventRow, currentPrices, eventDetail, marketSummary } from "../lib/markets";
@@ -285,6 +286,7 @@ async function adminUsers(db: D1Database, env: Env, where: string, binds: unknow
     const y = prices.get(p.ticker) ?? 50;
     posVal.set(p.user_id, (posVal.get(p.user_id) ?? 0) + p.yes_qty * y + p.no_qty * (100 - y));
   }
+  const dbAdmins = new Set((await db.prepare(`SELECT email FROM admins`).all<{ email: string }>()).results.map((r) => r.email));
   return users.map((u) => ({
     id: u.id,
     name: u.name,
@@ -294,9 +296,46 @@ async function adminUsers(db: D1Database, env: Env, where: string, binds: unknow
     totalValue: Math.round(u.balance + (lockedBy.get(u.id) ?? 0) + (posVal.get(u.id) ?? 0)),
     volume: u.volume,
     createdAt: u.created_at,
-    isAdmin: !!u.is_admin || isAdminEmail(env, u.email),
+    isAdmin: !!u.is_admin || isAdminEmail(env, u.email) || dbAdmins.has(u.email.toLowerCase()),
   }));
 }
+
+// ---------- admin management ----------
+async function listAdmins(db: D1Database, env: Env): Promise<AdminEntry[]> {
+  const owners = (env.ADMIN_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const added = (await db.prepare(`SELECT email, added_by, created_at FROM admins ORDER BY created_at`).all<{ email: string; added_by: string | null; created_at: number }>()).results;
+  const emails = [...new Set([...owners, ...added.map((a) => a.email)])];
+  const names = new Map(
+    (await db.prepare(`SELECT email, name FROM users WHERE email IN (SELECT value FROM json_each(?))`).bind(JSON.stringify(emails)).all<{ email: string; name: string }>()).results.map((r) => [r.email, r.name]),
+  );
+  return [
+    ...owners.map((e): AdminEntry => ({ email: e, name: names.get(e) ?? null, source: "owner", addedBy: null, createdAt: null })),
+    ...added
+      .filter((a) => !owners.includes(a.email))
+      .map((a): AdminEntry => ({ email: a.email, name: names.get(a.email) ?? null, source: "added", addedBy: a.added_by, createdAt: a.created_at })),
+  ];
+}
+
+admin.get("/admin/admins", async (c) => c.json({ admins: await listAdmins(c.env.DB, c.env) }));
+
+admin.post("/admin/admins", async (c) => {
+  const me = requireAdmin(c);
+  const { email: raw } = await parseBody(c, z.object({ email: z.string().trim().min(3).max(200) }));
+  const email = raw.toLowerCase();
+  if (!isAllowedEmail(c.env, email)) throw bad(`Admins must have an @${c.env.ALLOWED_EMAIL_DOMAIN} email`);
+  if (isAdminEmail(c.env, email)) throw bad("Already an admin");
+  const res = await c.env.DB.prepare(`INSERT OR IGNORE INTO admins (email, added_by, created_at) VALUES (?, ?, ?)`).bind(email, me.row.email, Date.now()).run();
+  if (!res.meta.changes) throw bad("Already an admin");
+  return c.json({ admins: await listAdmins(c.env.DB, c.env) });
+});
+
+admin.delete("/admin/admins/:email", async (c) => {
+  const email = decodeURIComponent(c.req.param("email")).toLowerCase();
+  if (isAdminEmail(c.env, email)) throw bad("Owner admins are set in the ADMIN_EMAILS secret and can't be removed here");
+  const res = await c.env.DB.prepare(`DELETE FROM admins WHERE email = ?`).bind(email).run();
+  if (!res.meta.changes) throw notFound("Not an admin");
+  return c.json({ admins: await listAdmins(c.env.DB, c.env) });
+});
 
 admin.get("/admin/users", async (c) => {
   const q = (c.req.query("q") ?? "").trim().toLowerCase().slice(0, 100);

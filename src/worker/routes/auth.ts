@@ -5,8 +5,8 @@ import {
   type AppEnv,
   createSession,
   destroySession,
-  isAdminEmail,
   isAllowedEmail,
+  resolveAdmin,
   isHttps,
   randomToken,
   toUser,
@@ -117,7 +117,7 @@ auth.post("/auth/dev-login", async (c) => {
   if (!isAllowedEmail(c.env, email)) throw new HttpError(403, `Only @${c.env.ALLOWED_EMAIL_DOMAIN} accounts are allowed`);
   const row = await upsertUser(c.env.DB, email, body.name ?? email.split("@")[0], null);
   await createSession(c, row.id);
-  return c.json({ user: toUser(row, isAdminEmail(c.env, row.email)) });
+  return c.json({ user: toUser(row, await resolveAdmin(c.env.DB, c.env, row.email)) });
 });
 
 auth.post("/auth/logout", async (c) => {

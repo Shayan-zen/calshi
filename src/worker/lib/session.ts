@@ -37,6 +37,12 @@ export function isAdminEmail(env: Env, email: string): boolean {
   return list.includes(email.toLowerCase());
 }
 
+/** Admin = listed in the ADMIN_EMAILS secret ("owner") OR added via the admin panel (admins table). */
+export async function resolveAdmin(db: D1Database, env: Env, email: string): Promise<boolean> {
+  if (isAdminEmail(env, email)) return true;
+  return !!(await db.prepare(`SELECT 1 FROM admins WHERE email = ?`).bind(email.toLowerCase()).first());
+}
+
 /** Exact-domain check: "x@evilpilani.bits-pilani.ac.in" fails for "pilani.bits-pilani.ac.in". */
 export function isAllowedEmail(env: Env, email: string): boolean {
   const domain = String(env.ALLOWED_EMAIL_DOMAIN).toLowerCase();
@@ -123,11 +129,15 @@ export const sessionMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   const token = getCookie(c, SESSION_COOKIE);
   if (token && token.length < 200) {
     const row = await c.env.DB.prepare(
-      `SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > ?`,
+      `SELECT u.*, EXISTS(SELECT 1 FROM admins a WHERE a.email = u.email) AS db_admin
+       FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > ?`,
     )
       .bind(await sha256Hex(token), Date.now())
-      .first<UserRow>();
-    if (row && !row.is_bot) c.set("user", { row, isAdmin: isAdminEmail(c.env, row.email) });
+      .first<UserRow & { db_admin: number }>();
+    if (row && !row.is_bot) {
+      const { db_admin, ...userRow } = row;
+      c.set("user", { row: userRow, isAdmin: isAdminEmail(c.env, row.email) || !!db_admin });
+    }
   }
   await next();
 };

@@ -20,6 +20,7 @@ const TABS = [
   ["create", "Create"],
   ["users", "Users"],
   ["comments", "Comments"],
+  ["admins", "Admins"],
 ] as const;
 type Tab = (typeof TABS)[number][0];
 
@@ -593,6 +594,112 @@ function CommentsTab() {
   );
 }
 
+function AdminsTab() {
+  const toast = useToast();
+  const qc = useQueryClient();
+  const admins = useQuery({ queryKey: ["adminAdmins"], queryFn: api.adminAdmins });
+  const [email, setEmail] = useState("");
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const onDone = (data: { admins: unknown }) => {
+    qc.setQueryData(["adminAdmins"], data);
+    void qc.invalidateQueries({ queryKey: ["adminUsers"] });
+  };
+  const add = useMutation({
+    mutationFn: (e: string) => api.adminAddAdmin(e),
+    onSuccess: (data, e) => {
+      onDone(data);
+      setEmail("");
+      toast.success("Admin added", e);
+    },
+    onError: (e) => toast.error("Couldn't add admin", errMsg(e)),
+  });
+  const remove = useMutation({
+    mutationFn: (e: string) => api.adminRemoveAdmin(e),
+    onSuccess: (data, e) => {
+      onDone(data);
+      setConfirming(null);
+      toast.success("Admin removed", e);
+    },
+    onError: (e) => toast.error("Couldn't remove admin", errMsg(e)),
+  });
+  const list = admins.data?.admins ?? [];
+
+  return (
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold">Admins</h2>
+        <p className="text-sm text-muted">Admins can create, edit, resolve and delete markets, credit users and add or remove other admins.</p>
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const v = email.trim();
+          if (v) add.mutate(v);
+        }}
+        className="flex flex-wrap gap-2"
+      >
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="f2025xxxx@pilani.bits-pilani.ac.in"
+          className="field h-9 w-full rounded-lg px-3 text-sm sm:w-80"
+        />
+        <button type="submit" disabled={add.isPending || !email.trim()} className={clsx(btnInk, "h-9 px-4 text-sm")}>
+          {add.isPending && <Spinner className="size-3" />}
+          Add admin
+        </button>
+      </form>
+      {admins.isLoading ? (
+        <Skeleton className="h-40" />
+      ) : admins.isError ? (
+        <ErrorState error={admins.error} onRetry={() => admins.refetch()} />
+      ) : (
+        <ul className="divide-y divide-line-2 rounded-xl border border-line bg-card">
+          {list.map((a) => (
+            <li key={a.email} className="flex flex-wrap items-center gap-3 px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-medium">{a.name ?? a.email}</span>
+                  {a.source === "owner" && (
+                    <span className="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-ink-2">OWNER</span>
+                  )}
+                  {!a.name && <span className="text-[11px] text-faint">hasn't signed in yet</span>}
+                </div>
+                <span className="block truncate text-[11px] text-faint">
+                  {a.email}
+                  {a.addedBy && ` · added by ${a.addedBy}`}
+                  {a.createdAt && ` · ${relTime(a.createdAt)}`}
+                </span>
+              </div>
+              {a.source === "added" &&
+                (confirming === a.email ? (
+                  <span className="flex items-center gap-1">
+                    <button
+                      onClick={() => remove.mutate(a.email)}
+                      disabled={remove.isPending}
+                      className="inline-flex items-center gap-1 rounded-md bg-down px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50"
+                    >
+                      {remove.isPending && <Spinner className="size-3" />}
+                      Confirm remove
+                    </button>
+                    <button onClick={() => setConfirming(null)} className={btnBack}>
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  <button onClick={() => setConfirming(a.email)} className="rounded-md px-2.5 py-1 text-xs font-medium text-down hover:bg-down-tint">
+                    Remove
+                  </button>
+                ))}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 export default function AdminPage() {
   const [params, setParams] = useSearchParams();
   const raw = params.get("tab");
@@ -623,6 +730,7 @@ export default function AdminPage() {
         {tab === "create" && <CreateEventForm />}
         {tab === "users" && <UsersTab />}
         {tab === "comments" && <CommentsTab />}
+        {tab === "admins" && <AdminsTab />}
       </div>
     </RequireAuth>
   );

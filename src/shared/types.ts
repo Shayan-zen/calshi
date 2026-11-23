@@ -192,6 +192,15 @@ export interface CreateEventRequest {
   markets: Array<{ title: string; subtitle?: string | null; initialPrice: number /* 1..99, bot quotes around it */ }>;
 }
 
+/** GET/POST/DELETE /api/admin/admins -> { admins: AdminEntry[] }. "owner" = from ADMIN_EMAILS secret (not removable). */
+export interface AdminEntry {
+  email: string;
+  name: string | null; // null if they haven't signed in yet
+  source: "owner" | "added";
+  addedBy: string | null;
+  createdAt: number | null;
+}
+
 export const STARTING_BALANCE = 100_000; // $1,000.00 play money
 
 /**
