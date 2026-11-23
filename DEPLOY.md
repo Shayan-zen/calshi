@@ -35,7 +35,7 @@ You can do this in the GitHub web editor:
 
    | Field | Value |
    |---|---|
-   | **Project name** | `pilani-predict` (**must match** `"name"` in `wrangler.jsonc`, or the build fails) |
+   | **Project name** | `calshii` (**must match** `"name"` in `wrangler.jsonc`, or the build fails) |
    | **Production branch** | `main` |
    | **Build command** | `npm run build` |
    | **Deploy command** | `npx wrangler d1 migrations apply DB --remote && npx wrangler deploy` |
@@ -55,23 +55,11 @@ You can do this in the GitHub web editor:
 > 3. In the Worker, go to **Settings → Build → Build variables and secrets** and add the token as a **secret** named `CLOUDFLARE_API_TOKEN`.
 > 4. Go to **Deployments** and click **Retry build**.
 
-## 4. Load the demo markets (one time only)
+## 4. Markets
 
-The database starts empty, with no markets and no market-maker bot account. To seed it once:
+Production starts with **no markets**. The migrations create the market-maker bot accounts, so any event you add gets liquidity straight away. After logging in (step 7), admins create events from **Admin → Create**.
 
-1. In the Worker, open **Settings → Build** and edit the **Deploy command** to:
-   ```
-   npx wrangler d1 migrations apply DB --remote && npm run db:seed:remote && npx wrangler deploy
-   ```
-2. Go to **Deployments** and click **Retry build** on the latest one, or push any commit.
-3. When it succeeds, **change the deploy command back** to:
-   ```
-   npx wrangler d1 migrations apply DB --remote && npx wrangler deploy
-   ```
-
-> ⚠️ Don't leave the seed step in. Re-seeding on every deploy would reset the demo markets and their price history.
-
-To check it worked: **D1 → pilani-predict → Console**, run `SELECT COUNT(*) FROM events;`, and expect roughly 25.
+> `npm run db:seed:*` loads ~25 demo events. Use it **only for local dev**; never run it against production.
 
 ## 5. Add the secrets
 
@@ -89,11 +77,11 @@ Click **Deploy** to save. **Never add `DEV_LOGIN`** here: it enables a password-
 
 ## 6. Allow the production URL in Google OAuth
 
-1. Copy your Worker's URL from its **Overview** page, e.g. `https://pilani-predict.<your-subdomain>.workers.dev`.
+1. Copy your Worker's URL from its **Overview** page, e.g. `https://calshii.<your-subdomain>.workers.dev`.
 2. In **console.cloud.google.com**, select your project and go to **APIs & Services → Credentials**, then click your OAuth 2.0 Client ID.
 3. Under **Authorized redirect URIs**, click **+ Add URI** and add:
    ```
-   https://pilani-predict.<your-subdomain>.workers.dev/api/auth/google/callback
+   https://calshii.<your-subdomain>.workers.dev/api/auth/google/callback
    ```
    For local dev, also add `http://localhost:5173/api/auth/google/callback`.
 4. Click **Save**. Google can take a few minutes to apply the change.
@@ -120,7 +108,7 @@ Click **Deploy** to save. **Never add `DEV_LOGIN`** here: it enables a password-
 
 | Symptom | Fix |
 |---|---|
-| Build fails: *"name doesn't match"* | The Worker project name must be exactly `pilani-predict`. |
+| Build fails: *"name doesn't match"* | The Worker project name must be exactly `calshii`. |
 | Build fails: *"database_id ... not found"* | Step 2 wasn't done, or the ID doesn't belong to this Cloudflare account. |
 | Google error `redirect_uri_mismatch` | The exact callback URL (https, no trailing slash) isn't listed in step 6. |
 | Redirected to `/login?auth_error=domain` | You used a non-`@pilani.bits-pilani.ac.in` account. This is working as intended. |
